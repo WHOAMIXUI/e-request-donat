@@ -200,6 +200,7 @@
                                     <th class="px-3 py-3 text-center">Qty</th>
                                     <th class="px-3 py-3 text-center">Status</th>
                                     <th id="thAdministrasi" class="px-4 py-3 text-center no-print">Aksi</th>
+                                    <th id="thCatatanAdmin" class="px-4 py-3 text-left no-print">Catatan Admin</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelData" class="bg-white divide-y text-sm"></tbody>
@@ -692,16 +693,33 @@
                 mediaHtml += '</div>';
                 
                 let aksiHtml = '';
-                if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
-                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest(${item.id})" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
-                    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
-                        <div class="flex justify-center gap-1">
-                            <button onclick="ubahStatus(${item.id}, 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">✓</button>
-                            <button onclick="ubahStatus(${item.id}, 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold">✕</button>
-                            ${btnHapus}
-                        </div>
-                    </td>`;
-                }
+                let catatanHtml = '';
+
+    // Default sembunyikan kolom catatan untuk staff
+    const thCatatan = document.getElementById('thCatatanAdmin');
+    if (thCatatan) thCatatan.classList.add('hidden');
+
+    if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
+    if (thCatatan) thCatatan.classList.remove('hidden');
+    
+    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest(${item.id})" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
+    
+    // Menambahkan tombol pending (⌛) di dalam barisan aksi
+    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
+        <div class="flex justify-center items-center gap-1">
+            <button onclick="ubahStatus(${item.id}, 'Pending')" class="bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold" title="Set Pending">⌛</button>
+            <button onclick="ubahStatus(${item.id}, 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold" title="Setujui">✓</button>
+            <button onclick="ubahStatus(${item.id}, 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold" title="Tolak">✕</button>
+            ${btnHapus}
+        </div>
+    </td>`;
+
+    // Menambahkan kolom input catatan admin di sebelah kolom aksi
+    let nilaiCatatan = item.catatanAdmin || '';
+    catatanHtml = `<td class="px-3 py-2 no-print border-b">
+        <input type="text" value="${nilaiCatatan}" onchange="simpanCatatanAdmin(${item.id}, this.value)" placeholder="Tambah catatan..." class="w-full px-2 py-1 border rounded text-xs outline-none bg-gray-50 focus:bg-white">
+    </td>`;
+}
 
                 tabel.innerHTML += `<tr>
                     <td class="px-3 py-3 text-xs border-b">${item.tanggal}</td>
@@ -712,6 +730,7 @@
                     <td class="px-3 py-3 text-center font-bold border-b">${item.jumlah}</td>
                     <td class="px-3 py-3 text-center border-b"><span class="px-2 py-0.5 border text-xs font-bold rounded ${badgeColor}">${item.status}</span></td>
                     ${aksiHtml}
+                    ${catatanHtml}
                 </tr>`;
             });
         }
@@ -721,6 +740,12 @@
             const win = window.open();
             win.document.write(`<title>Video Playback</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><video src="${srcData}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
         }
+
+function simpanCatatanAdmin(id, teksCatatan) {
+daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, catatanAdmin: teksCatatan} : i);
+localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+// Kita tidak perlu merender ulang tabel penuh agar ketikan user di text box tidak kehilangan fokus (loss focus)
+}
 
         function ubahStatus(id, stat) {
             daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, status: stat} : i);
