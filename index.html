@@ -224,7 +224,7 @@
                                     <th class="w-64 px-4 py-3">Catatan Alasan / Urgensi</th>
                                     <th class="w-16 px-2 py-3 text-center">Qty</th>
                                     <th class="w-24 px-3 py-3 text-center">Status</th>
-                                    <th id="thAdministrasi" class="w-32 px-4 py-3 text-center no-print">Aksi</th>
+                                    <th id="thAdministrasi" class="w-36 px-4 py-3 text-center no-print">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelData" class="bg-white divide-y text-sm"></tbody>
@@ -273,6 +273,33 @@
                             <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
                         </form>
                         <ul id="listMasterKategori" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="border-b pb-3 mb-4 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-800 uppercase">♻️ RECYCLE BIN (Pusat Pemulihan Data)</h3>
+                            <p class="text-xs text-gray-400 mt-0.5">Data permintaan logistik yang dihapus sementara akan ditampung di sini sebelum dibersihkan permanen.</p>
+                        </div>
+                        <span id="trashCountBadge" class="bg-red-100 text-red-700 font-extrabold text-xs px-3 py-1 rounded-full">0 Data</span>
+                    </div>
+                    <div class="overflow-x-auto border rounded max-h-64 overflow-y-auto">
+                        <table class="min-w-full divide-y text-xs">
+                            <thead class="bg-red-50 font-bold text-gray-700 uppercase">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Cabang / Pemohon</th>
+                                    <th class="px-3 py-2 text-left">Barang / Kategori</th>
+                                    <th class="px-3 py-2 text-center">Qty</th>
+                                    <th class="px-3 py-2 text-center">Opsi Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelRecycleBin" class="divide-y bg-white text-gray-600">
+                                <tr>
+                                    <td colspan="4" class="text-center py-6 text-gray-400">Recycle bin kosong.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -352,9 +379,10 @@
         let masterKategori = [];
         let masterUsers = [];
         let daftarPermintaan = [];
+        let daftarTrash = [];
         let appLogo = '';
         let currentUserObj = null;
-        let pieChartInstance = null; // Menyimpan instance chart agar tidak tumpang tindih
+        let pieChartInstance = null;
 
         function setDefaultTanggal() {
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
@@ -378,6 +406,15 @@
                         }));
                     } else {
                         daftarPermintaan = [];
+                    }
+
+                    if (db.trash) {
+                        daftarTrash = Object.keys(db.trash).map(key => ({
+                            firebaseKey: key,
+                            ...db.trash[key]
+                        }));
+                    } else {
+                        daftarTrash = [];
                     }
 
                     if (db.users) {
@@ -624,13 +661,11 @@
             });
         }
 
-        // 3. BARU: FUNGSI TOMBOL QUICK FILTER STATUS PENDING
         function setFilterStatusQuick(statusKey) {
             document.getElementById('filterStatus').value = statusKey;
             renderTabel();
         }
 
-        // 4. BARU: HITUNG STATISTIK & RE-RENDER PIE CHART
         function updateDashboardCharts(dataTotalAwal) {
             let pending = 0;
             let disetujui = 0;
@@ -642,16 +677,14 @@
                 else pending++;
             });
 
-            // Update Angka di Card
             document.getElementById('statPendingCount').innerText = pending;
             document.getElementById('statSetujuiCount').innerText = disetujui;
             document.getElementById('statTolakCount').innerText = ditolak;
 
-            // Render/Update Chart.js Pie Chart
             const ctx = document.getElementById('requestPieChart').getContext('2d');
             
             if (pieChartInstance) {
-                pieChartInstance.destroy(); // Hancurkan chart lama agar tidak bug saat hover
+                pieChartInstance.destroy();
             }
 
             pieChartInstance = new Chart(ctx, {
@@ -687,7 +720,6 @@
                 dataTerfilter = daftarPermintaan.filter(item => item.branch === currentUserObj.lockBranch);
             }
 
-            // Hitung statistik dashboard berdasarkan hak akses user (sebelum filter baris dijalankan)
             updateDashboardCharts(dataTerfilter);
 
             const cari = document.getElementById('filterCari').value.toLowerCase();
@@ -731,14 +763,20 @@
                 
                 let aksiHtml = '';
                 if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
-                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest('${item.firebaseKey}')" class="text-[11px] bg-red-100 text-red-700 px-1.5 py-1 rounded hover:bg-red-200 transition font-medium">Hapus</button>` : '';
+                    // Tombol Hapus Menggunakan Icon Tong Sampah, dan Tombol Edit Berlogo Pensil
+                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="pindahkanKeTrash('${item.firebaseKey}')" title="Hapus Sementara" class="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded transition shadow-sm text-xs">🗑️</button>` : '';
+                    let btnEdit = `<button onclick="bukaDialogEdit('${item.firebaseKey}')" title="Edit Baris Data" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-1.5 rounded transition shadow-sm text-xs">✏️</button>`;
+                    
                     aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
-                        <div class="flex flex-col justify-center items-center gap-1.5">
+                        <div class="flex flex-col sm:flex-row justify-center items-center gap-1.5">
                             <div class="flex gap-1">
                                 <button onclick="ubahStatus('${item.firebaseKey}', 'Disetujui')" title="Setujui" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✓</button>
                                 <button onclick="ubahStatus('${item.firebaseKey}', 'Ditolak')" title="Tolak" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✕</button>
                             </div>
-                            ${btnHapus}
+                            <div class="flex gap-1">
+                                ${btnEdit}
+                                ${btnHapus}
+                            </div>
                         </div>
                     </td>`;
                 }
@@ -770,6 +808,41 @@
             win.document.write(`<title>Video Playback</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><video src="${srcData}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
         }
 
+        // FITUR BARU: MODAL DIALOG EDIT VIA ICON PENSIL
+        function bukaDialogEdit(firebaseKey) {
+            const target = daftarPermintaan.find(item => item.firebaseKey === firebaseKey);
+            if(!target) return;
+
+            let namaBaru = prompt("Ubah Nama Barang:", target.namaBarang);
+            if(namaBaru === null) return; // Batal
+            
+            let qtyBaru = prompt("Ubah Jumlah (Qty):", target.jumlah);
+            if(qtyBaru === null) return;
+
+            let ketBaru = prompt("Ubah Catatan Alasan / Urgensi:", target.keterangan);
+            if(ketBaru === null) return;
+
+            if(!namaBaru.trim() || !qtyBaru.trim()) {
+                alert("Gagal menyimpan! Nama Barang dan Qty tidak boleh kosong.");
+                return;
+            }
+
+            // Simpan pembaruan ke Firebase
+            fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}.json`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    namaBarang: namaBaru.trim(),
+                    jumlah: parseInt(qtyBaru) || target.jumlah,
+                    keterangan: ketBaru.trim() || '-'
+                })
+            }).then(() => {
+                muatDataDariFirebase().then(() => {
+                    renderTabel();
+                    alert("Data pengajuan berhasil diperbarui.");
+                });
+            });
+        }
+
         async function ubahStatus(firebaseKey, stat) {
             await fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}/status.json`, {
                 method: 'PUT',
@@ -779,17 +852,96 @@
             renderTabel();
         }
 
-        async function hapusRequest(firebaseKey) {
-            if(confirm('Hapus data pengajuan ini secara permanen dari Cloud?')) {
-                await fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}.json`, {
-                    method: 'DELETE'
-                });
+        // RE-ENGINEERING: SEKARANG HAPUS AKAN MEMINDAHKAN DATA KE TRASH (RECYCLE BIN)
+        async function pindahkanKeTrash(firebaseKey) {
+            const targetData = daftarPermintaan.find(item => item.firebaseKey === firebaseKey);
+            if(!targetData) return;
+
+            if(confirm(`Pindahkan permintaan "${targetData.namaBarang}" oleh ${targetData.pemohon} ke Recycle Bin?`)) {
+                try {
+                    // 1. Simpan data ke node /trash
+                    await fetch(`${FIREBASE_BASE_URL}/trash.json`, {
+                        method: 'POST',
+                        body: JSON.stringify(targetData)
+                    });
+                    // 2. Hapus data utama dari node /requests
+                    await fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}.json`, {
+                        method: 'DELETE'
+                    });
+
+                    await muatDataDariFirebase();
+                    renderTabel();
+                    alert('Data dipindahkan ke Recycle Bin di Pengaturan Sistem.');
+                } catch(e) {
+                    alert('Gagal menghapus, periksa koneksi internet.');
+                }
+            }
+        }
+
+        // FITUR BARU: MANAGEMENT RECYCLE BIN (RESTORE & HAPUS PERMANEN)
+        function renderRecycleBin() {
+            const container = document.getElementById('tabelRecycleBin');
+            document.getElementById('trashCountBadge').innerText = `${daftarTrash.length} Data`;
+            
+            if(daftarTrash.length === 0) {
+                container.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-400">Recycle bin kosong.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            daftarTrash.forEach(item => {
+                container.innerHTML += `<tr>
+                    <td class="px-3 py-2 border-b">
+                        <div class="font-bold">${item.pemohon}</div>
+                        <div class="text-[10px] text-gray-400">${item.branch}</div>
+                    </td>
+                    <td class="px-3 py-2 border-b">
+                        <div class="font-semibold text-gray-800">${item.namaBarang}</div>
+                        <div class="text-[10px] text-blue-500 font-medium">${item.kategori}</div>
+                    </td>
+                    <td class="px-3 py-2 text-center font-bold border-b">${item.jumlah}</td>
+                    <td class="px-3 py-2 text-center border-b">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="restoreDariTrash('${item.firebaseKey}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-2 py-1 rounded text-[11px] font-bold">Restore</button>
+                            <button onclick="hapusPermanenTrash('${item.firebaseKey}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded text-[11px] font-bold">Hapus Permanen</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        async function restoreDariTrash(trashKey) {
+            const target = daftarTrash.find(item => item.firebaseKey === trashKey);
+            if(!target) return;
+
+            // Bersihkan field firebaseKey bawaan lama agar tidak duplikat id mentah
+            const cleanData = {...target};
+            delete cleanData.firebaseKey;
+
+            if(confirm(`Pulihkan kembali data "${cleanData.namaBarang}" ke tabel utama?`)) {
+                // Kembalikan ke requests
+                await fetch(`${FIREBASE_BASE_URL}/requests.json`, { method: 'POST', body: JSON.stringify(cleanData) });
+                // Hapus dari trash
+                await fetch(`${FIREBASE_BASE_URL}/trash/${trashKey}.json`, { method: 'DELETE' });
+                
                 await muatDataDariFirebase();
-                renderTabel();
+                renderPanelSettingMaster();
+                alert('Data berhasil dipulihkan.');
+            }
+        }
+
+        async function hapusPermanenTrash(trashKey) {
+            if(confirm('Peringatan! Data ini akan dihapus permanen dari Cloud dan tidak bisa dikembalikan lagi. Lanjutkan?')) {
+                await fetch(`${FIREBASE_BASE_URL}/trash/${trashKey}.json`, { method: 'DELETE' });
+                await muatDataDariFirebase();
+                renderPanelSettingMaster();
+                alert('Data telah dihapus permanen.');
             }
         }
 
         function renderPanelSettingMaster() {
+            renderRecycleBin();
+
             const lBranch = document.getElementById('listMasterBranch'); lBranch.innerHTML = '';
             masterBranches.forEach((b, idx) => {
                 lBranch.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
