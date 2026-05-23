@@ -5,8 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Request Barang - Donat Bahagia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Scrollbar untuk area tabel/list */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
         @media print {
             .no-print { display: none !important; }
             body { background-color: #ffffff !important; color: #000000 !important; }
@@ -14,191 +33,199 @@
             .print-panel-header { background-color: transparent !important; border-bottom: 2px solid #1f2937 !important; padding-left: 0 !important; padding-right: 0 !important; padding-top: 0 !important; }
             table { border-collapse: collapse !important; width: 100% !important; }
             th, td { border: 1px solid #d1d5db !important; padding: 6px 8px !important; font-size: 11px !important; }
-            th { background-color: #f3f4f6 !important; color: #000000 !important; font-bold: true; }
+            th { background-color: #f3f4f6 !important; color: #000000 !important; font-weight: bold !important; }
             .dynamic-logo { max-height: 50px !important; display: inline-block !important; }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased">
 
-    <div id="loginPage" class="flex items-center justify-center min-h-screen px-4">
-        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
-            <div class="text-center mb-4">
-                <div id="loginLogoContainer" class="flex justify-center items-center mb-1">
-                    <span class="text-3xl">🍩</span>
+    <div id="loginPage" class="flex items-center justify-center min-h-screen px-4 bg-gradient-to-br from-amber-50 via-slate-50 to-orange-50">
+        <div class="bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200/60 transition-all duration-300 hover:shadow-2xl">
+            <div class="text-center mb-8">
+                <div id="loginLogoContainer" class="flex justify-center items-center mb-3 drop-shadow-sm">
+                    <span class="text-4xl">🍩</span>
                 </div>
-                <h2 class="text-2xl font-bold text-blue-600">Donat Bahagia</h2>
-                <p class="text-gray-500 text-sm">E-Request Sistem Permintaan Barang</p>
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-500 tracking-tight">Donat Bahagia</h2>
+                <p class="text-slate-500 text-sm mt-1 font-medium">E-Request Sistem Permintaan Barang</p>
             </div>
             
-            <div id="loginError" class="hidden bg-red-100 text-red-700 text-sm p-3 rounded mb-4 text-center">
-                Username atau password salah!
+            <div id="loginError" class="hidden bg-rose-50 text-rose-700 text-xs font-semibold p-3.5 rounded-xl mb-5 text-center border border-rose-100 flex items-center justify-center gap-2">
+                ⚠️ Username atau password salah!
             </div>
 
-            <form onsubmit="prosesLogin(event)">
-                <div class="mb-4">
-                    <label class="block text-gray-600 text-sm mb-1">Username</label>
-                    <input type="text" id="username" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Masukkan username">
+            <form onsubmit="prosesLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" id="username" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition bg-white/50" placeholder="Masukkan username">
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-600 text-sm mb-1">Password</label>
-                    <input type="password" id="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Masukkan password">
+                <div class="mb-2">
+                    <label class="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition bg-white/50" placeholder="Masukkan password">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md shadow-sm transition">
-                    Masuk
+                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-orange-500/10 hover:shadow-lg transition-all duration-200 transform active:scale-[0.98]">
+                    Masuk ke Sistem
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="dashboardPage" class="hidden">
-        <nav class="bg-blue-600 text-white p-4 shadow-sm mb-6 no-print">
-            <div class="container mx-auto flex justify-between items-center max-w-5xl">
-                <h1 class="text-xl font-bold tracking-wide flex items-center">
-                    <span id="navLogoContainer" class="mr-2 flex items-center justify-center"><span>🍩</span></span>
-                    <span>E-Request Donat Bahagia</span>
+    <div id="dashboardPage" class="hidden animate-[fadeIn_0.4s_ease-out]">
+        <nav class="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 text-white p-4 shadow-md mb-8 no-print">
+            <div class="container mx-auto flex justify-between items-center max-w-6xl">
+                <h1 class="text-lg font-bold tracking-tight flex items-center">
+                    <span id="navLogoContainer" class="mr-2.5 flex items-center justify-center drop-shadow"><span>🍩</span></span>
+                    <span class="bg-clip-text bg-gradient-to-r from-white to-slate-200">E-Request Donat Bahagia</span>
                 </h1>
-                <div class="flex items-center space-x-4">
-                    <span id="userBadge" class="text-xs bg-blue-700 px-3 py-1.5 rounded-md font-semibold tracking-wide border border-blue-500">Role: -</span>
-                    <button onclick="logout()" class="text-xs bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md font-medium transition shadow-sm">Keluar</button>
+                <div class="flex items-center space-x-3">
+                    <span id="userBadge" class="text-xs bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg font-medium tracking-wide border border-white/10">Role: -</span>
+                    <button onclick="logout()" class="text-xs bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg font-semibold transition shadow-sm hover:shadow-md active:scale-95">Keluar</button>
                 </div>
             </div>
         </nav>
 
-        <div class="container mx-auto px-4 max-w-5xl mb-12">
+        <div class="container mx-auto px-4 max-w-6xl mb-16">
             
-            <div id="panelNav" class="flex p-1 bg-gray-200 rounded-lg space-x-1 mb-6 max-w-xl mx-auto no-print">
-                <button id="btnPanelForm" onclick="switchPanel('form')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
+            <div id="panelNav" class="flex p-1.5 bg-slate-200/70 backdrop-blur border border-slate-300/30 rounded-xl space-x-1.5 mb-8 max-w-xl mx-auto no-print">
+                <button id="btnPanelForm" onclick="switchPanel('form')" class="hidden w-full py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition duration-200">
                     📝 Form Request
                 </button>
-                <button id="btnPanelTabel" onclick="switchPanel('tabel')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
+                <button id="btnPanelTabel" onclick="switchPanel('tabel')" class="hidden w-full py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition duration-200">
                     📊 Monitoring Logistik
                 </button>
-                <button id="btnPanelSetting" onclick="switchPanel('setting')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
-                    ⚙️ Pengaturan Sistem
+                <button id="btnPanelSetting" onclick="switchPanel('setting')" class="hidden w-full py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition duration-200">
+                    ⚙️ Pengaturan
                 </button>
             </div>
 
-            <div id="panelForm" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden no-print">
-                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
-                    <h2 class="text-base font-bold text-gray-800 flex items-center">
-                        📝 <span class="ml-2">Panel Buat Permintaan Barang</span>
+            <div id="panelForm" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden no-print animate-[slideUp_0.3s_ease-out]">
+                <div class="bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200 px-6 py-4.5">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center">
+                        <span class="text-lg mr-2">📝</span> <span>Panel Buat Permintaan Barang</span>
                     </h2>
                 </div>
                 
-                <form id="requestForm" onsubmit="tambahBarang(event)" class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form id="requestForm" onsubmit="tambahBarang(event)" class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Tanggal Pengajuan</label>
-                            <input type="date" id="tanggal" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none bg-white">
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Tanggal Pengajuan</label>
+                            <input type="date" id="tanggal" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition">
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Cabang (Branch)</label>
-                            <select id="branch" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Cabang (Branch)</label>
+                            <select id="branch" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"></select>
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Nama Pemohon</label>
-                            <input type="text" id="pemohon" required placeholder="Nama lengkap Anda" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Divisi / Bagian</label>
-                            <select id="divisi" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Kategori Barang</label>
-                            <select id="kategori" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Nama Pemohon</label>
+                            <input type="text" id="pemohon" required placeholder="Nama lengkap Anda" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Divisi / Bagian</label>
+                            <select id="divisi" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"></select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Kategori Barang</label>
+                            <select id="kategori" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div class="md:col-span-2">
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Nama Barang</label>
-                            <input type="text" id="namaBarang" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none" placeholder="Contoh: Plastik Bungkus, Mika">
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Nama Barang</label>
+                            <input type="text" id="namaBarang" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition" placeholder="Contoh: Plastik Bungkus, Mika">
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Jumlah (Qty)</label>
-                            <input type="number" id="jumlah" min="1" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none">
+                            <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Jumlah (Qty)</label>
+                            <input type="number" id="jumlah" min="1" required placeholder="0" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-slate-100 pt-4">
                         <div>
-                            <label class="block text-gray-600 text-xs font-bold uppercase tracking-wider mb-1">Foto / Gambar Barang <span class="text-red-500">*Wajib (Min 1, Max 5)</span></label>
-                            <input type="file" id="gambarBarang" accept="image/*" multiple required class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 cursor-pointer">
-                            <p class="text-[10px] text-gray-400 mt-1">Pilih beberapa file sekaligus dengan menahan tombol Ctrl/Cmd.</p>
+                            <label class="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1.5">Foto Barang <span class="text-rose-500">*Wajib (Min 1, Max 5)</span></label>
+                            <input type="file" id="gambarBarang" accept="image/*" multiple required class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer border border-slate-200 p-1.5 rounded-xl bg-slate-50">
+                            <p class="text-[11px] text-slate-400 mt-1.5">Pilih beberapa file sekaligus dengan menahan tombol Ctrl/Cmd.</p>
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-xs font-bold uppercase tracking-wider mb-1">Video Pendukung <span class="text-gray-400">(Opsional - Maks 1 Video)</span></label>
-                            <input type="file" id="videoBarang" accept="video/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-purple-50 file:text-purple-700 cursor-pointer">
+                            <label class="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1.5">Video Pendukung <span class="text-slate-400">(Opsional - Maks 1 Video)</span></label>
+                            <input type="file" id="videoBarang" accept="video/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer border border-slate-200 p-1.5 rounded-xl bg-slate-50">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Alasan / Keterangan</label>
-                        <textarea id="keterangan" rows="2" placeholder="Tulis rincian urgensi..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none"></textarea>
+                        <label class="block text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1.5">Alasan / Keterangan Urgensi</label>
+                        <textarea id="keterangan" rows="3" placeholder="Tulis rincian urgensi permintaan barang..." class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"></textarea>
                     </div>
 
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-md shadow-sm transition">
-                            🚀 Kirim Pengajuan
+                    <div class="flex justify-end pt-3 border-t border-slate-100">
+                        <button type="submit" class="w-full md:w-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-semibold px-8 py-3 rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-95">
+                            🚀 Kirim Pengajuan Ke Pusat
                         </button>
                     </div>
                 </form>
             </div>
 
-            <div id="panelTabel" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print-area">
+            <div id="panelTabel" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-area animate-[slideUp_0.3s_ease-out]">
                 
-                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4 print-panel-header">
+                <div class="bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200 px-6 py-4.5 flex flex-wrap justify-between items-center gap-4 print-panel-header">
                     <div class="flex items-center space-x-3">
                         <div id="printLogoContainer" class="hidden print:block"><span>🍩</span></div>
                         <div>
-                            <h2 class="text-base font-bold text-gray-800">📊 Panel Rekapitulasi & Monitoring Logistik</h2>
+                            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                                <span>📊</span> <span>Panel Rekapitulasi & Monitoring Logistik</span>
+                            </h2>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2 no-print">
-                        <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-md font-semibold shadow-sm">🖨️ Cetak</button>
-                        <span id="totalRequest" class="bg-white text-gray-700 text-xs font-bold px-2.5 py-1.5 rounded-md border shadow-sm">Total: 0</span>
+                    <div class="flex items-center space-x-2.5 no-print">
+                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-xl font-semibold shadow-sm transition">🖨️ Cetak / PDF</button>
+                        <span id="totalRequest" class="bg-white text-slate-700 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 shadow-sm">Total: 0</span>
                     </div>
                 </div>
 
-                <div class="p-6 bg-slate-50/70 border-b grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
-                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 flex flex-col justify-center">
-                        <button onclick="setFilterStatusQuick('Pending')" class="bg-amber-50 hover:bg-amber-100 transition p-4 rounded-xl border border-amber-200 text-left relative overflow-hidden shadow-sm group">
-                            <div class="text-amber-800 font-bold text-xs uppercase tracking-wider">⌛ Status Pending</div>
-                            <div id="statPendingCount" class="text-3xl font-extrabold text-amber-600 mt-2">0</div>
-                            <div class="text-[11px] text-amber-500 mt-1 font-medium group-hover:underline">Klik untuk saring cepat →</div>
+                <div class="p-6 bg-slate-50/50 border-b border-slate-200 grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button onclick="setFilterStatusQuick('Pending')" class="bg-white hover:border-amber-300 transition-all p-4 rounded-2xl border border-slate-200 text-left relative overflow-hidden shadow-sm group">
+                            <div class="text-amber-600 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> ⌛ Status Pending
+                            </div>
+                            <div id="statPendingCount" class="text-3xl font-extrabold text-slate-800 mt-2">0</div>
+                            <div class="text-[11px] text-amber-500 mt-1.5 font-medium group-hover:underline">Klik untuk saring cepat →</div>
                         </button>
-                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-left relative overflow-hidden shadow-sm">
-                            <div class="text-emerald-800 font-bold text-xs uppercase tracking-wider">✅ Disetujui</div>
-                            <div id="statSetujuiCount" class="text-3xl font-extrabold text-emerald-600 mt-2">0</div>
-                            <div class="text-[11px] text-emerald-500 mt-1">Permintaan selesai</div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-left relative overflow-hidden shadow-sm">
+                            <div class="text-emerald-600 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ✅ Disetujui
+                            </div>
+                            <div id="statSetujuiCount" class="text-3xl font-extrabold text-slate-800 mt-2">0</div>
+                            <div class="text-[11px] text-slate-400 mt-1.5 font-medium">Permintaan selesai</div>
                         </div>
-                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 text-left relative overflow-hidden shadow-sm">
-                            <div class="text-rose-800 font-bold text-xs uppercase tracking-wider">❌ Ditolak</div>
-                            <div id="statTolakCount" class="text-3xl font-extrabold text-rose-600 mt-2">0</div>
-                            <div class="text-[11px] text-rose-500 mt-1">Dibatalkan/ditolak</div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-left relative overflow-hidden shadow-sm">
+                            <div class="text-rose-600 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span> ❌ Ditolak
+                            </div>
+                            <div id="statTolakCount" class="text-3xl font-extrabold text-slate-800 mt-2">0</div>
+                            <div class="text-[11px] text-slate-400 mt-1.5 font-medium">Dibatalkan/ditolak</div>
                         </div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border flex flex-col items-center justify-center shadow-sm h-40">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col items-center justify-center shadow-sm h-40">
                         <canvas id="requestPieChart"></canvas>
                     </div>
                 </div>
 
-                <div class="p-6 pb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 no-print bg-gray-50/50 border-b">
+                <div class="p-6 pb-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print bg-slate-50/30 border-b border-slate-100">
                     <div>
-                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Cari Barang / Pemohon</label>
-                        <input type="text" id="filterCari" oninput="renderTabel()" placeholder="Ketik kata kunci..." class="w-full px-3 py-1.5 border rounded-md text-xs outline-none">
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Cari Barang / Pemohon</label>
+                        <input type="text" id="filterCari" oninput="renderTabel()" placeholder="Ketik kata kunci..." class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-amber-500 bg-white">
                     </div>
                     <div>
-                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Cabang</label>
-                        <select id="filterBranch" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none"></select>
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Filter Cabang</label>
+                        <select id="filterBranch" onchange="renderTabel()" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none focus:border-amber-500"></select>
                     </div>
                     <div>
-                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Status</label>
-                        <select id="filterStatus" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none">
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Filter Status</label>
+                        <select id="filterStatus" onchange="renderTabel()" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none focus:border-amber-500">
                             <option value="ALL">-- Semua Status --</option>
                             <option value="Pending">⌛ Pending</option>
                             <option value="Disetujui">✅ Disetujui</option>
@@ -206,117 +233,117 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Kategori</label>
-                        <select id="filterKategori" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none"></select>
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Filter Kategori</label>
+                        <select id="filterKategori" onchange="renderTabel()" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none focus:border-amber-500"></select>
                     </div>
                 </div>
 
                 <div class="p-6">
-                    <div class="overflow-x-auto border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200 table-fixed">
-                            <thead class="bg-gray-50">
-                                <tr class="text-left text-xs font-bold text-gray-500 uppercase">
-                                    <th class="w-24 px-3 py-3">Tanggal</th>
-                                    <th class="w-28 px-3 py-3">Cabang</th>
-                                    <th class="w-36 px-4 py-3">Pemohon</th>
-                                    <th class="w-28 px-3 py-3 no-print">Media</th>
-                                    <th class="w-48 px-4 py-3">Detail Barang</th>
-                                    <th class="w-64 px-4 py-3">Catatan Alasan / Urgensi</th>
-                                    <th class="w-16 px-2 py-3 text-center">Qty</th>
-                                    <th class="w-24 px-3 py-3 text-center">Status</th>
-                                    <th id="thAdministrasi" class="w-36 px-4 py-3 text-center no-print">Aksi</th>
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl shadow-inner bg-slate-50/30">
+                        <table class="min-w-full divide-y divide-slate-200 table-fixed">
+                            <thead class="bg-slate-50">
+                                <tr class="text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="w-24 px-4 py-3.5">Tanggal</th>
+                                    <th class="w-28 px-4 py-3.5">Cabang</th>
+                                    <th class="w-40 px-4 py-3.5">Pemohon</th>
+                                    <th class="w-32 px-4 py-3.5 no-print">Media</th>
+                                    <th class="w-52 px-4 py-3.5">Detail Barang</th>
+                                    <th class="w-64 px-4 py-3.5">Alasan Urgensi</th>
+                                    <th class="w-20 px-3 py-3.5 text-center">Qty</th>
+                                    <th class="w-28 px-4 py-3.5 text-center">Status</th>
+                                    <th id="thAdministrasi" class="w-36 px-4 py-3.5 text-center no-print">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabelData" class="bg-white divide-y text-sm"></tbody>
+                            <tbody id="tabelData" class="bg-white divide-y divide-slate-100 text-xs text-slate-600"></tbody>
                         </table>
                     </div>
-                    <div id="pesanKosong" class="hidden text-center py-12 text-gray-400 font-medium bg-gray-50 mt-2 rounded border border-dashed">Data tidak ditemukan.</div>
+                    <div id="pesanKosong" class="hidden text-center py-16 text-slate-400 font-medium bg-slate-50 mt-3 rounded-xl border border-dashed border-slate-200">Data tidak ditemukan.</div>
                 </div>
             </div>
 
-            <div id="panelSetting" class="hidden space-y-6 no-print">
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 class="text-sm font-bold text-gray-800 uppercase mb-3">🖼️ Pengaturan Branding & Logo</h3>
-                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded border">
-                        <div id="currentLogoPreview" class="w-16 h-16 bg-white rounded border flex items-center justify-center overflow-hidden"><span>🍩</span></div>
+            <div id="panelSetting" class="hidden space-y-6 no-print animate-[slideUp_0.3s_ease-out]">
+                <div class="bg-white rounded-2xl shadow-sm border p-6">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-1.5"><span>🖼️</span> Pengaturan Branding & Logo</h3>
+                    <div class="flex flex-col sm:flex-row items-center gap-5 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div id="currentLogoPreview" class="w-16 h-16 bg-white rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm"><span>🍩</span></div>
                         <div class="flex-1 text-center sm:text-left">
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Unggah Logo Toko Baru</label>
-                            <input type="file" id="inputLogoSistem" accept="image/*" onchange="gantiLogoSistem(event)" class="text-xs text-gray-500 cursor-pointer">
+                            <label class="block text-xs font-bold text-slate-600 mb-1.5">Unggah Logo Toko Baru</label>
+                            <input type="file" id="inputLogoSistem" accept="image/*" onchange="gantiLogoSistem(event)" class="text-xs text-slate-500 cursor-pointer file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:bg-slate-200 file:text-slate-700">
                         </div>
-                        <button onclick="resetLogoSistem()" class="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">Reset Logo</button>
+                        <button onclick="resetLogoSistem()" class="text-xs bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-100 transition font-medium">Reset Logo</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-lg shadow-sm border p-4">
-                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🏢 Kelola Cabang</h3>
-                        <form onsubmit="addMasterItem(event, 'branch')" class="flex gap-2 mb-3">
-                            <input type="text" id="addBranchInput" required placeholder="Nama cabang baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
-                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                    <div class="bg-white rounded-2xl shadow-sm border p-5">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2.5 mb-3.5 flex items-center gap-1.5"><span>🏢</span> Kelola Cabang</h3>
+                        <form onsubmit="addMasterItem(event, 'branch')" class="flex gap-2 mb-3.5">
+                            <input type="text" id="addBranchInput" required placeholder="Nama cabang baru..." class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-amber-500 transition">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">+</button>
                         </form>
-                        <ul id="listMasterBranch" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                        <ul id="listMasterBranch" class="text-xs space-y-1.5 max-h-44 overflow-y-auto pr-1"></ul>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border p-4">
-                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🛠️ Kelola Divisi</h3>
-                        <form onsubmit="addMasterItem(event, 'divisi')" class="flex gap-2 mb-3">
-                            <input type="text" id="addDivisiInput" required placeholder="Nama divisi baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
-                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                    <div class="bg-white rounded-2xl shadow-sm border p-5">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2.5 mb-3.5 flex items-center gap-1.5"><span>🛠️</span> Kelola Divisi</h3>
+                        <form onsubmit="addMasterItem(event, 'divisi')" class="flex gap-2 mb-3.5">
+                            <input type="text" id="addDivisiInput" required placeholder="Nama divisi baru..." class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-amber-500 transition">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">+</button>
                         </form>
-                        <ul id="listMasterDivisi" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                        <ul id="listMasterDivisi" class="text-xs space-y-1.5 max-h-44 overflow-y-auto pr-1"></ul>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border p-4">
-                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">📦 Kelola Kategori</h3>
-                        <form onsubmit="addMasterItem(event, 'kategori')" class="flex gap-2 mb-3">
-                            <input type="text" id="addKategoriInput" required placeholder="Kategori baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
-                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                    <div class="bg-white rounded-2xl shadow-sm border p-5">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2.5 mb-3.5 flex items-center gap-1.5"><span>📦</span> Kelola Kategori</h3>
+                        <form onsubmit="addMasterItem(event, 'kategori')" class="flex gap-2 mb-3.5">
+                            <input type="text" id="addKategoriInput" required placeholder="Kategori baru..." class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-amber-500 transition">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">+</button>
                         </form>
-                        <ul id="listMasterKategori" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                        <ul id="listMasterKategori" class="text-xs space-y-1.5 max-h-44 overflow-y-auto pr-1"></ul>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <div class="border-b pb-3 mb-4 flex justify-between items-center">
+                <div class="bg-white rounded-2xl shadow-sm border p-6 border-rose-100">
+                    <div class="border-b border-slate-100 pb-3.5 mb-4 flex flex-wrap justify-between items-center gap-3">
                         <div>
-                            <h3 class="text-sm font-bold text-gray-800 uppercase">♻️ RECYCLE BIN (Pusat Pemulihan Data)</h3>
-                            <p class="text-xs text-gray-400 mt-0.5">Data permintaan logistik yang dihapus sementara akan ditampung di sini sebelum dibersihkan permanen.</p>
+                            <h3 class="text-sm font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5"><span>♻️</span> RECYCLE BIN (Pusat Pemulihan Data)</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Data permintaan logistik yang dihapus sementara akan ditampung di sini.</p>
                         </div>
-                        <span id="trashCountBadge" class="bg-red-100 text-red-700 font-extrabold text-xs px-3 py-1 rounded-full">0 Data</span>
+                        <span id="trashCountBadge" class="bg-rose-50 border border-rose-100 text-rose-700 font-extrabold text-xs px-3 py-1 rounded-full">0 Data</span>
                     </div>
-                    <div class="overflow-x-auto border rounded max-h-64 overflow-y-auto">
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl max-h-64 overflow-y-auto">
                         <table class="min-w-full divide-y text-xs">
-                            <thead class="bg-red-50 font-bold text-gray-700 uppercase">
+                            <thead class="bg-rose-50/50 font-bold text-rose-800 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-3 py-2 text-left">Cabang / Pemohon</th>
-                                    <th class="px-3 py-2 text-left">Barang / Kategori</th>
-                                    <th class="px-3 py-2 text-center">Qty</th>
-                                    <th class="px-3 py-2 text-center">Opsi Tindakan</th>
+                                    <th class="px-4 py-2.5 text-left">Cabang / Pemohon</th>
+                                    <th class="px-4 py-2.5 text-left">Barang / Kategori</th>
+                                    <th class="px-4 py-2.5 text-center">Qty</th>
+                                    <th class="px-4 py-2.5 text-center">Opsi Tindakan</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabelRecycleBin" class="divide-y bg-white text-gray-600">
+                            <tbody id="tabelRecycleBin" class="divide-y divide-slate-100 bg-white text-slate-600">
                                 <tr>
-                                    <td colspan="4" class="text-center py-6 text-gray-400">Recycle bin kosong.</td>
+                                    <td colspan="4" class="text-center py-8 text-slate-400">Recycle bin kosong.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 class="text-sm font-bold text-gray-800 uppercase mb-4">👥 Tambah Akun Pengguna & Setting Akses Kunci Menu</h3>
-                    <form onsubmit="tambahAkunUser(event)" class="bg-gray-50 border p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end mb-4">
+                <div class="bg-white rounded-2xl shadow-sm border p-6">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-1.5"><span>👥</span> Tambah Akun Pengguna & Opsi Akses Kunci Menu</h3>
+                    <form onsubmit="tambahAkunUser(event)" class="bg-slate-50 border border-slate-100 p-5 rounded-2xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end mb-5">
                         <div>
-                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Username</label>
-                            <input type="text" id="newUsername" required placeholder="Username..." class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                            <label class="block text-slate-600 text-[11px] font-bold uppercase tracking-wider mb-1.5">Username</label>
+                            <input type="text" id="newUsername" required placeholder="Username..." class="w-full px-3 py-2 border rounded-xl text-xs outline-none bg-white focus:border-amber-500">
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Password</label>
-                            <input type="text" id="newPassword" required placeholder="Password..." class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                            <label class="block text-slate-600 text-[11px] font-bold uppercase tracking-wider mb-1.5">Password</label>
+                            <input type="text" id="newPassword" required placeholder="Password..." class="w-full px-3 py-2 border rounded-xl text-xs outline-none bg-white focus:border-amber-500">
                         </div>
                         <div>
-                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Role Level</label>
-                            <select id="newRole" onchange="toggleLockOptionsBasedOnRole()" class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                            <label class="block text-slate-600 text-[11px] font-bold uppercase tracking-wider mb-1.5">Role Level</label>
+                            <select id="newRole" onchange="toggleLockOptionsBasedOnRole()" class="w-full px-3 py-2 border rounded-xl text-xs outline-none bg-white focus:border-amber-500">
                                 <option value="staff">Staff (Form + Monitoring)</option>
                                 <option value="approver">Approver (Hanya Monitoring)</option>
                                 <option value="admin">Super Admin (Custom Menu)</option>
@@ -324,45 +351,45 @@
                         </div>
                         
                         <div id="boxLockBranch">
-                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Batasi Kunci Cabang</label>
-                            <select id="newLockBranch" class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white"></select>
+                            <label class="block text-slate-600 text-[11px] font-bold uppercase tracking-wider mb-1.5">Batasi Kunci Cabang</label>
+                            <select id="newLockBranch" class="w-full px-3 py-2 border rounded-xl text-xs outline-none bg-white focus:border-amber-500"></select>
                         </div>
 
-                        <div id="boxLockMenus" class="sm:col-span-2 hidden bg-blue-50/50 p-2 border border-blue-200 rounded">
-                            <label class="block text-blue-700 text-[11px] font-bold mb-1.5">Hak Akses Menu Admin:</label>
+                        <div id="boxLockMenus" class="sm:col-span-2 hidden bg-amber-50/40 p-3 border border-amber-200/60 rounded-xl">
+                            <label class="block text-amber-800 text-[11px] font-bold uppercase tracking-wider mb-2">Hak Akses Menu Admin:</label>
                             <div class="flex flex-wrap gap-4 text-xs">
-                                <label class="flex items-center space-x-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chkMenuForm" checked class="rounded text-blue-600">
-                                    <span class="text-gray-700">Form Request</span>
+                                <label class="flex items-center space-x-2 cursor-pointer font-medium text-slate-700">
+                                    <input type="checkbox" id="chkMenuForm" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <span>Form Request</span>
                                 </label>
-                                <label class="flex items-center space-x-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chkMenuTabel" checked class="rounded text-blue-600">
-                                    <span class="text-gray-700">Monitoring Logistik</span>
+                                <label class="flex items-center space-x-2 cursor-pointer font-medium text-slate-700">
+                                    <input type="checkbox" id="chkMenuTabel" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <span>Monitoring Logistik</span>
                                 </label>
-                                <label class="flex items-center space-x-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chkMenuSetting" checked class="rounded text-blue-600">
-                                    <span class="text-gray-700">Pengaturan Sistem</span>
+                                <label class="flex items-center space-x-2 cursor-pointer font-medium text-slate-700">
+                                    <input type="checkbox" id="chkMenuSetting" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <span>Pengaturan Sistem</span>
                                 </label>
                             </div>
                         </div>
 
                         <div class="sm:col-span-2 md:col-span-3 flex justify-end">
-                            <button type="submit" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded shadow-sm hover:bg-blue-700 transition">Daftarkan Akun</button>
+                            <button type="submit" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-sm transition">Daftarkan Akun Baru</button>
                         </div>
                     </form>
 
-                    <div class="overflow-x-auto border rounded">
-                        <table class="min-w-full divide-y text-xs">
-                            <thead class="bg-gray-100 font-bold text-gray-600 uppercase">
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                        <table class="min-w-full divide-y text-xs text-slate-600">
+                            <thead class="bg-slate-50 font-bold text-slate-500 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-3 py-2 text-left">Username</th>
-                                    <th class="px-3 py-2 text-left">Password (Bisa Di-Edit)</th>
-                                    <th class="px-3 py-2 text-left">Role</th>
-                                    <th class="px-3 py-2 text-left">Akses Kunci Opsi / Cabang</th>
-                                    <th class="px-3 py-2 text-center">Tindakan</th>
+                                    <th class="px-4 py-3 text-left">Username</th>
+                                    <th class="px-4 py-3 text-left">Password (Bisa Di-Edit)</th>
+                                    <th class="px-4 py-3 text-left">Role</th>
+                                    <th class="px-4 py-3 text-left">Akses Kunci Opsi / Cabang</th>
+                                    <th class="px-4 py-3 text-center">Tindakan</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabelDataUser" class="divide-y bg-white"></tbody>
+                            <tbody id="tabelDataUser" class="divide-y divide-slate-100 bg-white"></tbody>
                         </table>
                     </div>
                 </div>
@@ -466,8 +493,8 @@
             const loginBox = document.getElementById('loginLogoContainer');
             const navBox = document.getElementById('navLogoContainer');
             const settingBox = document.getElementById('currentLogoPreview');
-            const content = appLogo ? `<img src="${appLogo}" class="dynamic-logo h-10 w-auto object-contain rounded">` : `<span class="text-3xl">🍩</span>`;
-            const contentLarge = appLogo ? `<img src="${appLogo}" class="h-14 w-auto object-contain rounded">` : `<span class="text-4xl">🍩</span>`;
+            const content = appLogo ? `<img src="${appLogo}" class="dynamic-logo h-9 w-auto object-contain rounded-xl">` : `<span class="text-3xl">🍩</span>`;
+            const contentLarge = appLogo ? `<img src="${appLogo}" class="h-16 w-auto object-contain rounded-2xl">` : `<span class="text-4xl">🍩</span>`;
             if(loginBox) loginBox.innerHTML = contentLarge;
             if(navBox) navBox.innerHTML = content;
             if(settingBox) settingBox.innerHTML = contentLarge;
@@ -565,8 +592,8 @@
             document.getElementById('panelTabel').classList.add('hidden');
             document.getElementById('panelSetting').classList.add('hidden');
 
-            const inActiveStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-md text-gray-600 hover:bg-gray-300/50 transition";
-            const activeStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-blue-600 text-white shadow-sm transition";
+            const inActiveStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-300/40 transition-all duration-200";
+            const activeStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm transition-all duration-200";
             
             document.getElementById('btnPanelForm').className = inActiveStyle;
             document.getElementById('btnPanelTabel').className = inActiveStyle;
@@ -703,7 +730,7 @@
                     plugins: {
                         legend: {
                             position: 'right',
-                            labels: { boxWidth: 12, font: { size: 10 } }
+                            labels: { boxWidth: 10, font: { size: 9, weight: '600' } }
                         }
                     }
                 }
@@ -747,46 +774,38 @@
             else thAdmin.classList.remove('hidden');
 
             dataTerfilter.sort((a, b) => {
-    // 1. Definisikan bobot urutan status
-    // Pending mendapat bobot terkecil (paling atas), Disetujui bobot terbesar (paling bawah)
-    const bobotStatus = { 'Pending': 1, 'Ditolak': 2, 'Disetujui': 3 };
-    
-    const bobotA = bobotStatus[a.status] || 2;
-    const bobotB = bobotStatus[b.status] || 2;
-
-    // Jika status berbeda, urutkan berdasarkan bobot status
-    if (bobotA !== bobotB) {
-        return bobotA - bobotB;
-    }
-
-    // 2. Jika statusnya sama, urutkan berdasarkan ID/waktu input terbaru di atas (descending)
-    return b.id - a.id;
-}).forEach(item => { 
+                const bobotStatus = { 'Pending': 1, 'Ditolak': 2, 'Disetujui': 3 };
+                const bobotA = bobotStatus[a.status] || 2;
+                const bobotB = bobotStatus[b.status] || 2;
+                if (bobotA !== bobotB) {
+                    return bobotA - bobotB;
+                }
+                return b.id - a.id;
+            }).forEach(item => { 
                 let badgeColor = item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (item.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200');
                 
-                let mediaHtml = '<div class="flex flex-wrap gap-1 max-w-[120px]">';
+                let mediaHtml = '<div class="flex flex-wrap gap-1.5 max-w-[120px]">';
                 if(item.listGambar && item.listGambar.length > 0) {
                     item.listGambar.forEach(imgSrc => {
-                        mediaHtml += `<img src="${imgSrc}" class="w-8 h-8 object-cover rounded border cursor-zoom-in" onclick="window.open('${imgSrc}')">`;
+                        mediaHtml += `<img src="${imgSrc}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 cursor-zoom-in transition hover:scale-105" onclick="window.open('${imgSrc}')">`;
                     });
                 }
                 if(item.videoData) {
-                    mediaHtml += `<button onclick="bukaModalVideo('${item.id}')" class="w-8 h-8 text-[11px] bg-purple-600 text-white rounded font-bold">🎬</button>
+                    mediaHtml += `<button onclick="bukaModalVideo('${item.id}')" class="w-8 h-8 text-[11px] bg-slate-800 text-white rounded-lg font-bold hover:bg-black transition flex items-center justify-center">🎬</button>
                     <div id="vidContainer_${item.id}" class="hidden">${item.videoData}</div>`;
                 }
                 mediaHtml += '</div>';
                 
                 let aksiHtml = '';
                 if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
-                    // Tombol Hapus Menggunakan Icon Tong Sampah, dan Tombol Edit Berlogo Pensil
-                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="pindahkanKeTrash('${item.firebaseKey}')" title="Hapus Sementara" class="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded transition shadow-sm text-xs">🗑️</button>` : '';
-                    let btnEdit = `<button onclick="bukaDialogEdit('${item.firebaseKey}')" title="Edit Baris Data" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-1.5 rounded transition shadow-sm text-xs">✏️</button>`;
+                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="pindahkanKeTrash('${item.firebaseKey}')" title="Hapus Sementara" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 p-1.5 rounded-lg transition text-xs flex items-center justify-center">🗑️</button>` : '';
+                    let btnEdit = `<button onclick="bukaDialogEdit('${item.firebaseKey}')" title="Edit Baris Data" class="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 p-1.5 rounded-lg transition text-xs flex items-center justify-center">✏️</button>`;
                     
-                    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
+                    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b border-slate-100">
                         <div class="flex flex-col sm:flex-row justify-center items-center gap-1.5">
                             <div class="flex gap-1">
-                                <button onclick="ubahStatus('${item.firebaseKey}', 'Disetujui')" title="Setujui" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✓</button>
-                                <button onclick="ubahStatus('${item.firebaseKey}', 'Ditolak')" title="Tolak" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✕</button>
+                                <button onclick="ubahStatus('${item.firebaseKey}', 'Disetujui')" title="Setujui" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold transition shadow-sm">✓</button>
+                                <button onclick="ubahStatus('${item.firebaseKey}', 'Ditolak')" title="Tolak" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold transition shadow-sm">✕</button>
                             </div>
                             <div class="flex gap-1">
                                 ${btnEdit}
@@ -797,21 +816,21 @@
                 }
 
                 tabel.innerHTML += `<tr>
-                    <td class="px-3 py-3 text-xs border-b text-gray-600">${item.tanggal}</td>
-                    <td class="px-3 py-3 font-semibold text-xs border-b text-gray-700">${item.branch.replace('Donat Bahagia ', '')}</td>
-                    <td class="px-4 py-3 border-b"><div class="font-bold text-gray-800">${item.pemohon}</div><div class="text-xs text-gray-400 font-medium">${item.divisi}</div></td>
-                    <td class="px-3 py-3 no-print border-b">${mediaHtml}</td>
-                    <td class="px-4 py-3 border-b">
-                        <div class="text-[10px] text-blue-600 font-extrabold uppercase tracking-wide mb-0.5">${item.kategori}</div>
-                        <div class="font-bold text-gray-900 text-sm">${item.namaBarang}</div>
+                    <td class="px-4 py-3.5 border-b border-slate-100 text-slate-500 font-medium">${item.tanggal}</td>
+                    <td class="px-4 py-3.5 font-bold border-b border-slate-100 text-slate-800">${item.branch.replace('Donat Bahagia ', '')}</td>
+                    <td class="px-4 py-3.5 border-b border-slate-100"><div class="font-bold text-slate-800 text-sm">${item.pemohon}</div><div class="text-[11px] text-slate-400 font-medium">${item.divisi}</div></td>
+                    <td class="px-4 py-3.5 no-print border-b border-slate-100">${mediaHtml}</td>
+                    <td class="px-4 py-3.5 border-b border-slate-100">
+                        <div class="text-[9px] bg-slate-100 border border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded w-max mb-1">${item.kategori}</div>
+                        <div class="font-semibold text-slate-900 text-sm">${item.namaBarang}</div>
                     </td>
-                    <td class="px-4 py-3 border-b bg-slate-50/40">
-                        <div class="text-xs text-gray-600 font-normal leading-relaxed break-words bg-white border p-2 rounded-md shadow-sm max-h-24 overflow-y-auto">
+                    <td class="px-4 py-3.5 border-b border-slate-100">
+                        <div class="text-xs text-slate-600 leading-relaxed break-words bg-slate-50 border border-slate-200/60 p-2 rounded-xl shadow-inner max-h-24 overflow-y-auto">
                             ${item.keterangan}
                         </div>
                     </td>
-                    <td class="px-3 py-3 text-center font-extrabold text-gray-900 text-base border-b">${item.jumlah}</td>
-                    <td class="px-3 py-3 text-center border-b"><span class="px-2.5 py-1 border text-xs font-bold rounded-full shadow-sm ${badgeColor}">${item.status}</span></td>
+                    <td class="px-3 py-3.5 text-center font-black text-slate-900 text-base border-b border-slate-100">${item.jumlah}</td>
+                    <td class="px-4 py-3.5 text-center border-b border-slate-100"><span class="px-3 py-1 border text-[11px] font-bold rounded-full shadow-sm ${badgeColor}">${item.status}</span></td>
                     ${aksiHtml}
                 </tr>`;
             });
@@ -823,13 +842,12 @@
             win.document.write(`<title>Video Playback</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><video src="${srcData}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
         }
 
-        // FITUR BARU: MODAL DIALOG EDIT VIA ICON PENSIL
         function bukaDialogEdit(firebaseKey) {
             const target = daftarPermintaan.find(item => item.firebaseKey === firebaseKey);
             if(!target) return;
 
             let namaBaru = prompt("Ubah Nama Barang:", target.namaBarang);
-            if(namaBaru === null) return; // Batal
+            if(namaBaru === null) return; 
             
             let qtyBaru = prompt("Ubah Jumlah (Qty):", target.jumlah);
             if(qtyBaru === null) return;
@@ -842,7 +860,6 @@
                 return;
             }
 
-            // Simpan pembaruan ke Firebase
             fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}.json`, {
                 method: 'PATCH',
                 body: JSON.stringify({
@@ -867,19 +884,16 @@
             renderTabel();
         }
 
-        // RE-ENGINEERING: SEKARANG HAPUS AKAN MEMINDAHKAN DATA KE TRASH (RECYCLE BIN)
         async function pindahkanKeTrash(firebaseKey) {
             const targetData = daftarPermintaan.find(item => item.firebaseKey === firebaseKey);
             if(!targetData) return;
 
             if(confirm(`Pindahkan permintaan "${targetData.namaBarang}" oleh ${targetData.pemohon} ke Recycle Bin?`)) {
                 try {
-                    // 1. Simpan data ke node /trash
                     await fetch(`${FIREBASE_BASE_URL}/trash.json`, {
                         method: 'POST',
                         body: JSON.stringify(targetData)
                     });
-                    // 2. Hapus data utama dari node /requests
                     await fetch(`${FIREBASE_BASE_URL}/requests/${firebaseKey}.json`, {
                         method: 'DELETE'
                     });
@@ -893,32 +907,31 @@
             }
         }
 
-        // FITUR BARU: MANAGEMENT RECYCLE BIN (RESTORE & HAPUS PERMANEN)
         function renderRecycleBin() {
             const container = document.getElementById('tabelRecycleBin');
             document.getElementById('trashCountBadge').innerText = `${daftarTrash.length} Data`;
             
             if(daftarTrash.length === 0) {
-                container.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-400">Recycle bin kosong.</td></tr>`;
+                container.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Recycle bin kosong.</td></tr>`;
                 return;
             }
 
             container.innerHTML = '';
             daftarTrash.forEach(item => {
                 container.innerHTML += `<tr>
-                    <td class="px-3 py-2 border-b">
-                        <div class="font-bold">${item.pemohon}</div>
-                        <div class="text-[10px] text-gray-400">${item.branch}</div>
+                    <td class="px-4 py-3 border-b border-slate-100">
+                        <div class="font-bold text-slate-800">${item.pemohon}</div>
+                        <div class="text-[10px] text-slate-400">${item.branch}</div>
                     </td>
-                    <td class="px-3 py-2 border-b">
-                        <div class="font-semibold text-gray-800">${item.namaBarang}</div>
-                        <div class="text-[10px] text-blue-500 font-medium">${item.kategori}</div>
+                    <td class="px-4 py-3 border-b border-slate-100">
+                        <div class="font-semibold text-slate-800">${item.namaBarang}</div>
+                        <div class="text-[10px] text-amber-600 font-medium">${item.kategori}</div>
                     </td>
-                    <td class="px-3 py-2 text-center font-bold border-b">${item.jumlah}</td>
-                    <td class="px-3 py-2 text-center border-b">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="restoreDariTrash('${item.firebaseKey}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-2 py-1 rounded text-[11px] font-bold">Restore</button>
-                            <button onclick="hapusPermanenTrash('${item.firebaseKey}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded text-[11px] font-bold">Hapus Permanen</button>
+                    <td class="px-4 py-3 text-center font-bold text-slate-800 border-b border-slate-100">${item.jumlah}</td>
+                    <td class="px-4 py-3 text-center border-b border-slate-100">
+                        <div class="flex justify-center gap-1.5">
+                            <button onclick="restoreDariTrash('${item.firebaseKey}')" class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold transition hover:bg-emerald-100">Restore</button>
+                            <button onclick="hapusPermanenTrash('${item.firebaseKey}')" class="bg-rose-50 border border-rose-200 text-rose-700 px-2.5 py-1 rounded-lg text-[11px] font-bold transition hover:bg-rose-100">Hapus Permanen</button>
                         </div>
                     </td>
                 </tr>`;
@@ -929,14 +942,11 @@
             const target = daftarTrash.find(item => item.firebaseKey === trashKey);
             if(!target) return;
 
-            // Bersihkan field firebaseKey bawaan lama agar tidak duplikat id mentah
             const cleanData = {...target};
             delete cleanData.firebaseKey;
 
             if(confirm(`Pulihkan kembali data "${cleanData.namaBarang}" ke tabel utama?`)) {
-                // Kembalikan ke requests
                 await fetch(`${FIREBASE_BASE_URL}/requests.json`, { method: 'POST', body: JSON.stringify(cleanData) });
-                // Hapus dari trash
                 await fetch(`${FIREBASE_BASE_URL}/trash/${trashKey}.json`, { method: 'DELETE' });
                 
                 await muatDataDariFirebase();
@@ -959,40 +969,40 @@
 
             const lBranch = document.getElementById('listMasterBranch'); lBranch.innerHTML = '';
             masterBranches.forEach((b, idx) => {
-                lBranch.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
-                    <span>${b}</span>
-                    <div class="flex gap-1.5">
+                lBranch.innerHTML += `<li class="flex justify-between bg-slate-50 border border-slate-200/60 p-2 rounded-xl items-center mb-1.5">
+                    <span class="font-medium text-slate-700">${b}</span>
+                    <div class="flex gap-2 text-[11px] font-semibold">
                         <button onclick="editMasterItem('branch', ${idx})" class="text-blue-600 hover:underline">Edit</button>
-                        <button onclick="deleteMasterItem('branch', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                        <button onclick="deleteMasterItem('branch', ${idx})" class="text-rose-500 font-bold px-1">✕</button>
                     </div>
                 </li>`;
             });
 
             const lDivisi = document.getElementById('listMasterDivisi'); lDivisi.innerHTML = '';
             masterDivisi.forEach((d, idx) => {
-                lDivisi.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
-                    <span>${d}</span>
-                    <div class="flex gap-1.5">
+                lDivisi.innerHTML += `<li class="flex justify-between bg-slate-50 border border-slate-200/60 p-2 rounded-xl items-center mb-1.5">
+                    <span class="font-medium text-slate-700">${d}</span>
+                    <div class="flex gap-2 text-[11px] font-semibold">
                         <button onclick="editMasterItem('divisi', ${idx})" class="text-blue-600 hover:underline">Edit</button>
-                        <button onclick="deleteMasterItem('divisi', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                        <button onclick="deleteMasterItem('divisi', ${idx})" class="text-rose-500 font-bold px-1">✕</button>
                     </div>
                 </li>`;
             });
 
             const lKategori = document.getElementById('listMasterKategori'); lKategori.innerHTML = '';
             masterKategori.forEach((k, idx) => {
-                lKategori.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
-                    <span>${k}</span>
-                    <div class="flex gap-1.5">
+                lKategori.innerHTML += `<li class="flex justify-between bg-slate-50 border border-slate-200/60 p-2 rounded-xl items-center mb-1.5">
+                    <span class="font-medium text-slate-700">${k}</span>
+                    <div class="flex gap-2 text-[11px] font-semibold">
                         <button onclick="editMasterItem('kategori', ${idx})" class="text-blue-600 hover:underline">Edit</button>
-                        <button onclick="deleteMasterItem('kategori', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                        <button onclick="deleteMasterItem('kategori', ${idx})" class="text-rose-500 font-bold px-1">✕</button>
                     </div>
                 </li>`;
             });
 
             const tUser = document.getElementById('tabelDataUser'); tUser.innerHTML = '';
             masterUsers.forEach((u, idx) => {
-                let disabledHapus = u.username === 'admin' ? 'disabled class="text-gray-300 cursor-not-allowed"' : 'class="text-red-600 font-semibold"';
+                let disabledHapus = u.username === 'admin' ? 'disabled class="text-slate-300 cursor-not-allowed font-medium"' : 'class="text-rose-600 font-semibold hover:underline"';
                 let listLabelMenu = (u.allowedMenus || []).map(m => {
                     if(m === 'form') return '📝Form';
                     if(m === 'tabel') return '📊Monitor';
@@ -1000,16 +1010,16 @@
                 }).join(', ');
 
                 tUser.innerHTML += `<tr>
-                    <td class="px-3 py-2 font-medium border-b">${u.username}</td>
-                    <td class="px-3 py-2 border-b">
-                        <input type="text" value="${u.password}" onchange="editPasswordUser('${u.firebaseKey}', this.value)" class="border px-2 py-0.5 rounded text-xs w-24 bg-gray-50 focus:bg-white">
+                    <td class="px-4 py-3 font-semibold border-b border-slate-100 text-slate-800">${u.username}</td>
+                    <td class="px-4 py-3 border-b border-slate-100">
+                        <input type="text" value="${u.password}" onchange="editPasswordUser('${u.firebaseKey}', this.value)" class="border border-slate-200 px-2 py-1 rounded-lg text-xs w-28 bg-slate-50 focus:bg-white focus:border-amber-500 outline-none transition">
                     </td>
-                    <td class="px-3 py-2 border-b"><span class="px-1.5 py-0.5 rounded font-bold bg-gray-100">${u.role.toUpperCase()}</span></td>
-                    <td class="px-3 py-2 border-b text-gray-500">
-                        <div class="font-semibold text-blue-600">Menu: [${listLabelMenu}]</div>
-                        <div class="text-[10px]">${u.role === 'staff' ? '🔒 Cabang: ' + u.lockBranch.replace('Donat Bahagia ', '') : '🔓 Global'}</div>
+                    <td class="px-4 py-3 border-b border-slate-100"><span class="px-2 py-0.5 rounded-md font-bold bg-slate-100 border text-slate-700">${u.role.toUpperCase()}</span></td>
+                    <td class="px-4 py-3 border-b border-slate-100 text-slate-500">
+                        <div class="font-bold text-amber-600">Menu: [${listLabelMenu}]</div>
+                        <div class="text-[10px] font-medium mt-0.5">${u.role === 'staff' ? '🔒 Cabang: ' + u.lockBranch.replace('Donat Bahagia ', '') : '🔓 Global Access'}</div>
                     </td>
-                    <td class="px-3 py-2 text-center border-b">
+                    <td class="px-4 py-3 text-center border-b border-slate-100">
                         <button onclick="deleteMasterItem('user', '${u.firebaseKey}')" ${disabledHapus}>Hapus</button>
                     </td>
                 </tr>`;
