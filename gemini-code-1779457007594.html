@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Request Barang - Donat Bahagia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .print-area { width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: none !important; display: block !important; padding: 0 !important; }
+            .print-panel-header { background-color: transparent !important; border-bottom: 2px solid #1f2937 !important; padding-left: 0 !important; padding-right: 0 !important; padding-top: 0 !important; }
+            table { border-collapse: collapse !important; width: 100% !important; }
+            th, td { border: 1px solid #d1d5db !important; padding: 6px 8px !important; font-size: 11px !important; }
+            th { background-color: #f3f4f6 !important; color: #000000 !important; font-bold: true; }
+            .dynamic-logo { max-height: 50px !important; display: inline-block !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
+
+    <!-- ================= HALAMAN LOGIN ================= -->
+    <div id="loginPage" class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
+            <div class="text-center mb-4">
+                <div id="loginLogoContainer" class="flex justify-center items-center mb-1">
+                    <span class="text-3xl">🍩</span>
+                </div>
+                <h2 class="text-2xl font-bold text-blue-600">Donat Bahagia</h2>
+                <p class="text-gray-500 text-sm">E-Request Sistem Permintaan Barang</p>
+            </div>
+            
+            <div id="loginError" class="hidden bg-red-100 text-red-700 text-sm p-3 rounded mb-4 text-center">
+                Username atau password salah!
+            </div>
+
+            <form onsubmit="prosesLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm mb-1">Username</label>
+                    <input type="text" id="username" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Masukkan username">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-600 text-sm mb-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Masukkan password">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md shadow-sm transition">
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ================= HALAMAN DASHBOARD ================= -->
+    <div id="dashboardPage" class="hidden">
+        <!-- Navbar -->
+        <nav class="bg-blue-600 text-white p-4 shadow-sm mb-6 no-print">
+            <div class="container mx-auto flex justify-between items-center max-w-5xl">
+                <h1 class="text-xl font-bold tracking-wide flex items-center">
+                    <span id="navLogoContainer" class="mr-2 flex items-center justify-center"><span>🍩</span></span>
+                    <span>E-Request Donat Bahagia</span>
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <span id="userBadge" class="text-xs bg-blue-700 px-3 py-1.5 rounded-md font-semibold tracking-wide border border-blue-500">Role: -</span>
+                    <button onclick="logout()" class="text-xs bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md font-medium transition shadow-sm">Keluar</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- CONTAINER UTAMA -->
+        <div class="container mx-auto px-4 max-w-5xl mb-12">
+            
+            <!-- ====== TOMBOL NAVIGASI PANEL (TAB BUTTONS) ====== -->
+            <div id="panelNav" class="flex p-1 bg-gray-200 rounded-lg space-x-1 mb-6 max-w-xl mx-auto no-print">
+                <button id="btnPanelForm" onclick="switchPanel('form')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
+                    📝 Form Request
+                </button>
+                <button id="btnPanelTabel" onclick="switchPanel('tabel')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
+                    📊 Monitoring Logistik
+                </button>
+                <button id="btnPanelSetting" onclick="switchPanel('setting')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
+                    ⚙️ Pengaturan Sistem
+                </button>
+            </div>
+
+            <!-- ================= PANEL 1: FORM INPUT ================= -->
+            <div id="panelForm" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden no-print">
+                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                    <h2 class="text-base font-bold text-gray-800 flex items-center">
+                        📝 <span class="ml-2">Panel Buat Permintaan Barang</span>
+                    </h2>
+                </div>
+                
+                <form id="requestForm" onsubmit="tambahBarang(event)" class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Tanggal Pengajuan</label>
+                            <input type="date" id="tanggal" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Cabang (Branch)</label>
+                            <select id="branch" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Nama Pemohon</label>
+                            <input type="text" id="pemohon" required placeholder="Nama lengkap Anda" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Divisi / Bagian</label>
+                            <select id="divisi" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Kategori Barang</label>
+                            <select id="kategori" required class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm outline-none"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Nama Barang</label>
+                            <input type="text" id="namaBarang" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none" placeholder="Contoh: Plastik Bungkus, Mika">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Jumlah (Qty)</label>
+                            <input type="number" id="jumlah" min="1" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none">
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD MEDIA BARU -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
+                        <div>
+                            <label class="block text-gray-600 text-xs font-bold uppercase tracking-wider mb-1">Foto / Gambar Barang <span class="text-red-500">*Wajib (Min 1, Max 5)</span></label>
+                            <input type="file" id="gambarBarang" accept="image/*" multiple required class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                            <p class="text-[10px] text-gray-400 mt-1">Pilih beberapa file sekaligus dengan menahan tombol Ctrl/Cmd.</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-bold uppercase tracking-wider mb-1">Video Pendukung <span class="text-gray-400">(Opsional - Maks 1 Video)</span></label>
+                            <input type="file" id="videoBarang" accept="video/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-purple-50 file:text-purple-700 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">Alasan / Keterangan</label>
+                        <textarea id="keterangan" rows="2" placeholder="Tulis rincian urgensi..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none"></textarea>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-md shadow-sm transition">
+                            🚀 Kirim Pengajuan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ================= PANEL 2: MONITORING LOGISTIK ================= -->
+            <div id="panelTabel" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print-area">
+                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4 print-panel-header">
+                    <div class="flex items-center space-x-3">
+                        <div id="printLogoContainer" class="hidden print:block"><span>🍩</span></div>
+                        <div>
+                            <h2 class="text-base font-bold text-gray-800">📊 Panel Rekapitulasi & Monitoring Logistik</h2>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 no-print">
+                        <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-md font-semibold shadow-sm">🖨️ Cetak</button>
+                        <span id="totalRequest" class="bg-white text-gray-700 text-xs font-bold px-2.5 py-1.5 rounded-md border shadow-sm">Total: 0</span>
+                    </div>
+                </div>
+
+                <!-- FILTER BARANG -->
+                <div class="p-6 pb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 no-print bg-gray-50/50 border-b">
+                    <div>
+                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Cari Barang / Pemohon</label>
+                        <input type="text" id="filterCari" oninput="renderTabel()" placeholder="Ketik kata kunci..." class="w-full px-3 py-1.5 border rounded-md text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Cabang</label>
+                        <select id="filterBranch" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Status</label>
+                        <select id="filterStatus" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none">
+                            <option value="ALL">-- Semua Status --</option>
+                            <option value="Pending">⌛ Pending</option>
+                            <option value="Disetujui">✅ Disetujui</option>
+                            <option value="Ditolak">❌ Ditolak</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Filter Kategori</label>
+                        <select id="filterKategori" onchange="renderTabel()" class="w-full px-3 py-1.5 border rounded-md text-xs bg-white outline-none"></select>
+                    </div>
+                </div>
+
+                <!-- Tabel Data -->
+                <div class="p-6">
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 table-auto">
+                            <thead class="bg-gray-50">
+                                <tr class="text-left text-xs font-bold text-gray-500 uppercase">
+                                    <th class="px-3 py-3">Tanggal</th>
+                                    <th class="px-3 py-3">Cabang</th>
+                                    <th class="px-4 py-3">Pemohon</th>
+                                    <th class="px-3 py-3 no-print">Berkas Media</th>
+                                    <th class="px-4 py-3">Detail Barang</th>
+                                    <th class="px-3 py-3 text-center">Qty</th>
+                                    <th class="px-3 py-3 text-center">Status</th>
+                                    <th id="thAdministrasi" class="px-4 py-3 text-center no-print">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelData" class="bg-white divide-y text-sm"></tbody>
+                        </table>
+                    </div>
+                    <div id="pesanKosong" class="hidden text-center py-12 text-gray-400 font-medium bg-gray-50 mt-2 rounded border border-dashed">Data tidak ditemukan.</div>
+                </div>
+            </div>
+
+            <!-- ================= PANEL 3: SETTING MASTER SYSTEM (ADMIN) ================= -->
+            <div id="panelSetting" class="hidden space-y-6 no-print">
+                
+                <!-- GANTI LOGO -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase mb-3">🖼️ Pengaturan Branding & Logo</h3>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded border">
+                        <div id="currentLogoPreview" class="w-16 h-16 bg-white rounded border flex items-center justify-center overflow-hidden"><span>🍩</span></div>
+                        <div class="flex-1 text-center sm:text-left">
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Unggah Logo Toko Baru</label>
+                            <input type="file" id="inputLogoSistem" accept="image/*" onchange="gantiLogoSistem(event)" class="text-xs text-gray-500 cursor-pointer">
+                        </div>
+                        <button onclick="resetLogoSistem()" class="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">Reset Logo</button>
+                    </div>
+                </div>
+
+                <!-- 3 KOLOM DATA MASTER (EDIT + DELETE) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Kelola Cabang -->
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🏢 Kelola Cabang</h3>
+                        <form onsubmit="addMasterItem(event, 'branch')" class="flex gap-2 mb-3">
+                            <input type="text" id="addBranchInput" required placeholder="Nama cabang baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
+                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                        </form>
+                        <ul id="listMasterBranch" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                    </div>
+
+                    <!-- Kelola Divisi -->
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🛠️ Kelola Divisi</h3>
+                        <form onsubmit="addMasterItem(event, 'divisi')" class="flex gap-2 mb-3">
+                            <input type="text" id="addDivisiInput" required placeholder="Nama divisi baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
+                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                        </form>
+                        <ul id="listMasterDivisi" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                    </div>
+
+                    <!-- Kelola Kategori -->
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">📦 Kelola Kategori</h3>
+                        <form onsubmit="addMasterItem(event, 'kategori')" class="flex gap-2 mb-3">
+                            <input type="text" id="addKategoriInput" required placeholder="Kategori baru..." class="w-full px-2 py-1 border rounded text-xs outline-none">
+                            <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">+</button>
+                        </form>
+                        <ul id="listMasterKategori" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
+                    </div>
+                </div>
+
+                <!-- MANAJEMEN AKUN & LIMIT MENUS/BRANCH -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase mb-4">👥 Tambah Akun Pengguna & Setting Akses Kunci Menu</h3>
+                    <form onsubmit="tambahAkunUser(event)" class="bg-gray-50 border p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end mb-4">
+                        <div>
+                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Username</label>
+                            <input type="text" id="newUsername" required placeholder="Username..." class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Password</label>
+                            <input type="text" id="newPassword" required placeholder="Password..." class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Role Level</label>
+                            <select id="newRole" onchange="toggleLockOptionsBasedOnRole()" class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white">
+                                <option value="staff">Staff (Form + Monitoring)</option>
+                                <option value="approver">Approver (Hanya Monitoring)</option>
+                                <option value="admin">Super Admin (Custom Menu)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- LIMIT KUNCI CABANG (Untuk Staff) -->
+                        <div id="boxLockBranch">
+                            <label class="block text-gray-600 text-[11px] font-bold mb-1">Batasi Kunci Cabang</label>
+                            <select id="newLockBranch" class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white"></select>
+                        </div>
+
+                        <!-- LIMIT KUNCI MENU (KHUSUS UNTUK ROLE ADMIN YG DIDAFTARKAN) -->
+                        <div id="boxLockMenus" class="sm:col-span-2 hidden bg-blue-50/50 p-2 border border-blue-200 rounded">
+                            <label class="block text-blue-700 text-[11px] font-bold mb-1.5">Hak Akses Menu Admin:</label>
+                            <div class="flex flex-wrap gap-4 text-xs">
+                                <label class="flex items-center space-x-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chkMenuForm" checked class="rounded text-blue-600">
+                                    <span class="text-gray-700">Form Request</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chkMenuTabel" checked class="rounded text-blue-600">
+                                    <span class="text-gray-700">Monitoring Logistik</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chkMenuSetting" checked class="rounded text-blue-600">
+                                    <span class="text-gray-700">Pengaturan Sistem</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2 md:col-span-3 flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded shadow-sm hover:bg-blue-700 transition">Daftarkan Akun</button>
+                        </div>
+                    </form>
+
+                    <div class="overflow-x-auto border rounded">
+                        <table class="min-w-full divide-y text-xs">
+                            <thead class="bg-gray-100 font-bold text-gray-600 uppercase">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Username</th>
+                                    <th class="px-3 py-2 text-left">Password (Bisa Di-Edit)</th>
+                                    <th class="px-3 py-2 text-left">Role</th>
+                                    <th class="px-3 py-2 text-left">Akses Kunci Opsi / Cabang</th>
+                                    <th class="px-3 py-2 text-center">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelDataUser" class="divide-y bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ================= PANEL RESTORE DATA RECYCLE BIN ================= -->
+                <div class="bg-white rounded-lg shadow-sm border border-red-200 p-6">
+                    <h3 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center">🗑️ Gudang Pemulihan Data (Recycle Bin)</h3>
+                    <p class="text-xs text-gray-500 mb-4">Semua konfigurasi data master, akun, atau berkas pengajuan yang terhapus dapat di-restore semula.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border rounded p-3 bg-gray-50">
+                            <h4 class="text-xs font-bold text-gray-700 mb-2">📦 Sampah Data Pengajuan Barang</h4>
+                            <div class="max-h-40 overflow-y-auto text-xs space-y-1.5" id="trashRequestBox"></div>
+                        </div>
+                        <div class="border rounded p-3 bg-gray-50">
+                            <h4 class="text-xs font-bold text-gray-700 mb-2">⚙️ Sampah Sistem & Pengaturan</h4>
+                            <div class="max-h-40 overflow-y-auto text-xs space-y-1.5" id="trashMasterBox"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LOGIKA JAVASCRIPT MASTER V19 ================= -->
+    <script>
+        const KEY_REQUESTS = 'db_req_v16_data';
+        const KEY_BRANCHES = 'db_req_v16_branches';
+        const KEY_DIVISI = 'db_req_v16_divisi';
+        const KEY_KATEGORI = 'db_req_v16_kategori';
+        const KEY_USERS = 'db_req_v16_users';
+        const KEY_LOGO = 'db_req_v16_logo';
+        const KEY_TRASH_REQUESTS = 'db_req_v16_trash_req';
+        const KEY_TRASH_MASTER = 'db_req_v16_trash_master';
+        const KEY_SESSION = 'db_req_v16_session'; // Kunci Local Storage Baru untuk Sesi Login
+
+        const defBranch = ["Donat Bahagia Bintaro", "Donat Bahagia Cipete"];
+        const defDivisi = ["Cashier", "Toping", "Produksi", "Cleaning Service", "Gudang", "Bar"];
+        const defKategori = ["Alat Tulis Kantor (ATK)", "Perangkat/peralatan Operasional", "Chemical", "Medical Supplies"];
+        
+        const defUsers = [
+            { username: 'admin', password: '123', role: 'admin', lockBranch: 'ALL', allowedMenus: ['form', 'tabel', 'setting'] },
+            { username: 'approver', password: '123', role: 'approver', lockBranch: 'ALL', allowedMenus: ['tabel'] },
+            { username: 'staff_bintaro', password: '123', role: 'staff', lockBranch: 'Donat Bahagia Bintaro', allowedMenus: ['form', 'tabel'] }
+        ];
+
+        let masterBranches = JSON.parse(localStorage.getItem(KEY_BRANCHES)) || defBranch;
+        let masterDivisi = JSON.parse(localStorage.getItem(KEY_DIVISI)) || defDivisi;
+        let masterKategori = JSON.parse(localStorage.getItem(KEY_KATEGORI)) || defKategori;
+        let masterUsers = JSON.parse(localStorage.getItem(KEY_USERS)) || defUsers;
+        let daftarPermintaan = JSON.parse(localStorage.getItem(KEY_REQUESTS)) || [];
+        let appLogo = localStorage.getItem(KEY_LOGO) || '';
+        
+        let trashRequests = JSON.parse(localStorage.getItem(KEY_TRASH_REQUESTS)) || [];
+        let trashMaster = JSON.parse(localStorage.getItem(KEY_TRASH_MASTER)) || [];
+
+        masterUsers = masterUsers.map(u => {
+            if(!u.allowedMenus) {
+                if(u.role === 'admin') u.allowedMenus = ['form', 'tabel', 'setting'];
+                else if(u.role === 'approver') u.allowedMenus = ['tabel'];
+                else u.allowedMenus = ['form', 'tabel'];
+            }
+            return u;
+        });
+
+        if(!localStorage.getItem(KEY_BRANCHES)) localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+        if(!localStorage.getItem(KEY_DIVISI)) localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+        if(!localStorage.getItem(KEY_KATEGORI)) localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+        if(!localStorage.getItem(KEY_USERS)) localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+
+        let currentUserObj = null;
+
+        function setDefaultTanggal() {
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+        }
+
+        // ================= PENGECEKAN AKTIF SAAT KODE PERTAMA DI-REFRESH =================
+        window.addEventListener('DOMContentLoaded', () => {
+            applyLogoSistem();
+            setDefaultTanggal();
+            buildSelectOptions();
+            checkSavedSession(); // Cek apakah sebelumnya user sudah login
+        });
+
+        function checkSavedSession() {
+            const savedUser = localStorage.getItem(KEY_SESSION);
+            if(savedUser) {
+                // Konversi string kembali menjadi objek user
+                currentUserObj = JSON.parse(savedUser);
+                
+                // Sembunyikan form login, langsung tampilkan dashboard
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboardPage').classList.remove('hidden');
+                aturHakAkses();
+            }
+        }
+
+        function applyLogoSistem() {
+            const loginBox = document.getElementById('loginLogoContainer');
+            const navBox = document.getElementById('navLogoContainer');
+            const printBox = document.getElementById('printLogoContainer');
+            const settingBox = document.getElementById('currentLogoPreview');
+            const content = appLogo ? `<img src="${appLogo}" class="dynamic-logo h-10 w-auto object-contain rounded">` : `<span class="text-3xl">🍩</span>`;
+            const contentLarge = appLogo ? `<img src="${appLogo}" class="h-14 w-auto object-contain rounded">` : `<span class="text-4xl">🍩</span>`;
+            if(loginBox) loginBox.innerHTML = contentLarge;
+            if(navBox) navBox.innerHTML = content;
+            if(printBox) printBox.innerHTML = content;
+            if(settingBox) settingBox.innerHTML = contentLarge;
+        }
+
+        function buildSelectOptions() {
+            const sBranchForm = document.getElementById('branch');
+            const sDivisiForm = document.getElementById('divisi');
+            const sKategoriForm = document.getElementById('kategori');
+            const sBranchFilter = document.getElementById('filterBranch');
+            const sKategoriFilter = document.getElementById('filterKategori');
+            const sNewUserBranch = document.getElementById('newLockBranch');
+
+            sBranchForm.innerHTML = '<option value="">-- Pilih Cabang --</option>';
+            masterBranches.forEach(b => sBranchForm.innerHTML += `<option value="${b}">${b}</option>`);
+
+            sBranchFilter.innerHTML = '<option value="ALL">-- Semua Cabang --</option>';
+            masterBranches.forEach(b => sBranchFilter.innerHTML += `<option value="${b}">${b.replace('Donat Bahagia ', '')}</option>`);
+
+            sDivisiForm.innerHTML = '<option value="">-- Pilih Divisi --</option>';
+            masterDivisi.forEach(d => sDivisiForm.innerHTML += `<option value="${d}">${d}</option>`);
+
+            sKategoriForm.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+            masterKategori.forEach(k => sKategoriForm.innerHTML += `<option value="${k}">${k}</option>`);
+
+            sKategoriFilter.innerHTML = '<option value="ALL">-- Semua Kategori --</option>';
+            masterKategori.forEach(k => sKategoriFilter.innerHTML += `<option value="${k}">${k}</option>`);
+
+            sNewUserBranch.innerHTML = '<option value="ALL">Semua Cabang (No Lock)</option>';
+            masterBranches.forEach(b => sNewUserBranch.innerHTML += `<option value="${b}">${b.replace('Donat Bahagia ', '')}</option>`);
+        }
+
+        function prosesLogin(event) {
+            event.preventDefault();
+            const uInput = document.getElementById('username').value.trim().toLowerCase();
+            const pInput = document.getElementById('password').value.trim();
+            const foundUser = masterUsers.find(u => u.username.toLowerCase() === uInput && u.password === pInput);
+
+            if (foundUser) {
+                currentUserObj = foundUser;
+                
+                // BARU: Simpan data user ke local storage agar saat refresh tidak hilang
+                localStorage.setItem(KEY_SESSION, JSON.stringify(currentUserObj));
+
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboardPage').classList.remove('hidden');
+                aturHakAkses();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function aturHakAkses() {
+            const panelNav = document.getElementById('panelNav');
+            const btnForm = document.getElementById('btnPanelForm');
+            const btnTabel = document.getElementById('btnPanelTabel');
+            const btnSetting = document.getElementById('btnPanelSetting');
+            const selectBranchForm = document.getElementById('branch');
+            const wrapperFilterBranch = document.getElementById('filterBranch').parentElement;
+
+            document.getElementById('userBadge').innerText = `User: ${currentUserObj.username.toUpperCase()} (${currentUserObj.role})`;
+            
+            panelNav.classList.remove('hidden');
+            btnForm.classList.add('hidden');
+            btnTabel.classList.add('hidden');
+            btnSetting.classList.add('hidden');
+            wrapperFilterBranch.classList.remove('hidden');
+            selectBranchForm.disabled = false;
+
+            const menus = currentUserObj.allowedMenus || [];
+
+            if (menus.includes('form')) btnForm.classList.remove('hidden');
+            if (menus.includes('tabel')) btnTabel.classList.remove('hidden');
+            if (menus.includes('setting')) btnSetting.classList.remove('hidden');
+
+            if (currentUserObj.role === 'staff') {
+                wrapperFilterBranch.classList.add('hidden'); 
+                if(currentUserObj.lockBranch && currentUserObj.lockBranch !== 'ALL') {
+                    selectBranchForm.value = currentUserObj.lockBranch;
+                    selectBranchForm.disabled = true;
+                }
+            }
+
+            if (menus.includes('form')) {
+                switchPanel('form');
+            } else if (menus.includes('tabel')) {
+                switchPanel('tabel');
+            } else if (menus.includes('setting')) {
+                switchPanel('setting');
+            } else {
+                panelNav.classList.add('hidden');
+                alert('Akun Anda tidak memiliki hak akses ke menu manapun.');
+            }
+        }
+
+        function switchPanel(panelType) {
+            const menus = currentUserObj ? (currentUserObj.allowedMenus || []) : [];
+            if(!menus.includes(panelType)) return; 
+
+            document.getElementById('panelForm').classList.add('hidden');
+            document.getElementById('panelTabel').classList.add('hidden');
+            document.getElementById('panelSetting').classList.add('hidden');
+
+            const inActiveStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-md text-gray-600 hover:bg-gray-300/50 transition";
+            const activeStyle = "w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-blue-600 text-white shadow-sm transition";
+            
+            document.getElementById('btnPanelForm').className = inActiveStyle;
+            document.getElementById('btnPanelTabel').className = inActiveStyle;
+            document.getElementById('btnPanelSetting').className = inActiveStyle;
+
+            const panelNav = document.getElementById('panelNav');
+            if (menus.length <= 1) {
+                panelNav.classList.add('hidden');
+            } else {
+                panelNav.classList.remove('hidden');
+            }
+
+            if (panelType === 'form') {
+                document.getElementById('panelForm').classList.remove('hidden');
+                document.getElementById('btnPanelForm').className = activeStyle;
+            } else if (panelType === 'tabel') {
+                document.getElementById('panelTabel').classList.remove('hidden');
+                document.getElementById('btnPanelTabel').className = activeStyle;
+                renderTabel();
+            } else if (panelType === 'setting') {
+                document.getElementById('panelSetting').classList.remove('hidden');
+                document.getElementById('btnPanelSetting').className = activeStyle;
+                renderPanelSettingMaster();
+            }
+        }
+
+        function logout() {
+            currentUserObj = null;
+            localStorage.removeItem(KEY_SESSION); // BARU: Hapus sesi dari local storage saat klik keluar
+
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // ================= PROSES MULTI FILE UPLOAD & VALIDASI =================
+        async function tambahBarang(event) {
+            event.preventDefault();
+            const imageInput = document.getElementById('gambarBarang');
+            const videoInput = document.getElementById('videoBarang');
+            const imageFiles = imageInput.files;
+            const videoFiles = videoInput.files;
+
+            if(imageFiles.length < 1 || imageFiles.length > 5) {
+                alert(`Gagal mengirim! Gambar wajib diisi minimal 1 dan maksimal 5 berkas.`);
+                return;
+            }
+
+            if(videoFiles.length > 1) {
+                alert("Gagal mengirim! Maksimal video hanya 1 berkas.");
+                return;
+            }
+
+            let arrayGambarBase64 = [];
+            for (let i = 0; i < imageFiles.length; i++) {
+                const b64 = await convertFileToBase64(imageFiles[i]);
+                arrayGambarBase64.push(b64);
+            }
+
+            let videoBase64 = '';
+            if(videoFiles.length === 1) {
+                videoBase64 = await convertFileToBase64(videoFiles[0]);
+            }
+
+            simpanDataMedia(arrayGambarBase64, videoBase64);
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function simpanDataMedia(imagesArray, videoStr) {
+            const dataBaru = {
+                id: Date.now(),
+                tanggal: document.getElementById('tanggal').value,
+                branch: document.getElementById('branch').value,
+                pemohon: document.getElementById('pemohon').value,
+                divisi: document.getElementById('divisi').value,
+                kategori: document.getElementById('kategori').value,
+                namaBarang: document.getElementById('namaBarang').value,
+                jumlah: document.getElementById('jumlah').value,
+                keterangan: document.getElementById('keterangan').value || '-',
+                status: 'Pending',
+                listGambar: imagesArray,
+                videoData: videoStr    
+            };
+
+            try {
+                daftarPermintaan.push(dataBaru);
+                localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+                document.getElementById('requestForm').reset();
+                aturHakAkses(); 
+                setDefaultTanggal();
+                alert('Pengajuan logistik dengan berkas media berhasil dikirim!');
+            } catch (error) {
+                alert('Peringatan: Ukuran file gambar/video terlalu besar.');
+                daftarPermintaan.pop();
+            }
+        }
+
+        function renderTabel() {
+            const tabel = document.getElementById('tabelData');
+            const thAdmin = document.getElementById('thAdministrasi');
+            tabel.innerHTML = '';
+            
+            let dataTerfilter = daftarPermintaan;
+            if(currentUserObj.role === 'staff' && currentUserObj.lockBranch && currentUserObj.lockBranch !== 'ALL') {
+                dataTerfilter = daftarPermintaan.filter(item => item.branch === currentUserObj.lockBranch);
+            }
+
+            const cari = document.getElementById('filterCari').value.toLowerCase();
+            const fBranch = document.getElementById('filterBranch').value;
+            const fStatus = document.getElementById('filterStatus').value;
+            const fKategori = document.getElementById('filterKategori').value;
+
+            dataTerfilter = dataTerfilter.filter(item => {
+                return (fStatus === 'ALL' || item.status === fStatus) &&
+                       (fKategori === 'ALL' || item.kategori === fKategori) &&
+                       (currentUserObj.role === 'staff' || fBranch === 'ALL' || item.branch === fBranch) &&
+                       (item.namaBarang.toLowerCase().includes(cari) || item.pemohon.toLowerCase().includes(cari));
+            });
+
+            document.getElementById('totalRequest').innerText = `Total: ${dataTerfilter.length}`;
+            if(dataTerfilter.length === 0) {
+                document.getElementById('pesanKosong').classList.remove('hidden');
+                if (currentUserObj.role === 'staff') thAdmin.classList.add('hidden');
+                else thAdmin.classList.remove('hidden');
+                return;
+            }
+            document.getElementById('pesanKosong').classList.add('hidden');
+
+            if (currentUserObj.role === 'staff') thAdmin.classList.add('hidden');
+            else thAdmin.classList.remove('hidden');
+
+            dataTerfilter.sort((a,b)=> b.id - a.id).forEach(item => {
+                let badgeColor = item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (item.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200');
+                
+                let mediaHtml = '<div class="flex flex-wrap gap-1 max-w-[120px]">';
+                if(item.listGambar && item.listGambar.length > 0) {
+                    item.listGambar.forEach(imgSrc => {
+                        mediaHtml += `<img src="${imgSrc}" class="w-8 h-8 object-cover rounded border cursor-zoom-in" onclick="window.open('${imgSrc}')">`;
+                    });
+                }
+                if(item.videoData) {
+                    mediaHtml += `<button onclick="bukaModalVideo('${item.id}')" class="w-8 h-8 text-[11px] bg-purple-600 text-white rounded font-bold">🎬</button>
+                    <div id="vidContainer_${item.id}" class="hidden">${item.videoData}</div>`;
+                }
+                mediaHtml += '</div>';
+                
+                let aksiHtml = '';
+                if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
+                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest(${item.id})" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
+                    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
+                        <div class="flex justify-center gap-1">
+                            <button onclick="ubahStatus(${item.id}, 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">✓</button>
+                            <button onclick="ubahStatus(${item.id}, 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold">✕</button>
+                            ${btnHapus}
+                        </div>
+                    </td>`;
+                }
+
+                tabel.innerHTML += `<tr>
+                    <td class="px-3 py-3 text-xs border-b">${item.tanggal}</td>
+                    <td class="px-3 py-3 font-semibold text-xs border-b">${item.branch.replace('Donat Bahagia ', '')}</td>
+                    <td class="px-4 py-3 border-b"><div class="font-bold">${item.pemohon}</div><div class="text-xs text-gray-400">${item.divisi}</div></td>
+                    <td class="px-3 py-3 no-print border-b">${mediaHtml}</td>
+                    <td class="px-4 py-3 border-b"><div class="text-[10px] text-blue-500 font-bold">${item.kategori}</div><div class="font-bold">${item.namaBarang}</div><div class="text-xs italic text-gray-400">"Ket: ${item.keterangan}"</div></td>
+                    <td class="px-3 py-3 text-center font-bold border-b">${item.jumlah}</td>
+                    <td class="px-3 py-3 text-center border-b"><span class="px-2 py-0.5 border text-xs font-bold rounded ${badgeColor}">${item.status}</span></td>
+                    ${aksiHtml}
+                </tr>`;
+            });
+        }
+
+        function bukaModalVideo(id) {
+            const srcData = document.getElementById(`vidContainer_${id}`).innerText;
+            const win = window.open();
+            win.document.write(`<title>Video Playback</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><video src="${srcData}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
+        }
+
+        function ubahStatus(id, stat) {
+            daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, status: stat} : i);
+            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+            renderTabel();
+        }
+
+        function hapusRequest(id) {
+            if(confirm('Pindahkan data ke Gudang Sampah?')) {
+                const item = daftarPermintaan.find(i => i.id === id);
+                if(item) {
+                    trashRequests.push(item);
+                    localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
+                    daftarPermintaan = daftarPermintaan.filter(i => i.id !== id);
+                    localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+                    renderTabel();
+                }
+            }
+        }
+
+        function renderPanelSettingMaster() {
+            const lBranch = document.getElementById('listMasterBranch'); lBranch.innerHTML = '';
+            masterBranches.forEach((b, idx) => {
+                lBranch.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
+                    <span>${b}</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="editMasterItem('branch', ${idx})" class="text-blue-600 hover:underline">Edit</button>
+                        <button onclick="deleteMasterItem('branch', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                    </div>
+                </li>`;
+            });
+
+            const lDivisi = document.getElementById('listMasterDivisi'); lDivisi.innerHTML = '';
+            masterDivisi.forEach((d, idx) => {
+                lDivisi.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
+                    <span>${d}</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="editMasterItem('divisi', ${idx})" class="text-blue-600 hover:underline">Edit</button>
+                        <button onclick="deleteMasterItem('divisi', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                    </div>
+                </li>`;
+            });
+
+            const lKategori = document.getElementById('listMasterKategori'); lKategori.innerHTML = '';
+            masterKategori.forEach((k, idx) => {
+                lKategori.innerHTML += `<li class="flex justify-between bg-gray-50 border p-1.5 rounded items-center mb-1">
+                    <span>${k}</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="editMasterItem('kategori', ${idx})" class="text-blue-600 hover:underline">Edit</button>
+                        <button onclick="deleteMasterItem('kategori', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+                    </div>
+                </li>`;
+            });
+
+            const tUser = document.getElementById('tabelDataUser'); tUser.innerHTML = '';
+            masterUsers.forEach((u, idx) => {
+                let disabledHapus = u.username === 'admin' ? 'disabled class="text-gray-300 cursor-not-allowed"' : 'class="text-red-600 font-semibold"';
+                let listLabelMenu = (u.allowedMenus || []).map(m => {
+                    if(m === 'form') return '📝Form';
+                    if(m === 'tabel') return '📊Monitor';
+                    if(m === 'setting') return '⚙️Set';
+                }).join(', ');
+
+                tUser.innerHTML += `<tr>
+                    <td class="px-3 py-2 font-medium border-b">${u.username}</td>
+                    <td class="px-3 py-2 border-b">
+                        <input type="text" value="${u.password}" onchange="editPasswordUser(${idx}, this.value)" class="border px-2 py-0.5 rounded text-xs w-24 bg-gray-50 focus:bg-white">
+                    </td>
+                    <td class="px-3 py-2 border-b"><span class="px-1.5 py-0.5 rounded font-bold bg-gray-100">${u.role.toUpperCase()}</span></td>
+                    <td class="px-3 py-2 border-b text-gray-500">
+                        <div class="font-semibold text-blue-600">Menu: [${listLabelMenu}]</div>
+                        <div class="text-[10px]">${u.role === 'staff' ? '🔒 Cabang: ' + u.lockBranch.replace('Donat Bahagia ', '') : '🔓 Global'}</div>
+                    </td>
+                    <td class="px-3 py-2 text-center border-b">
+                        <button onclick="deleteMasterItem('user', ${idx})" ${disabledHapus}>Hapus</button>
+                    </td>
+                </tr>`;
+            });
+
+            renderRecycleBinLists();
+        }
+
+        function editMasterItem(type, index) {
+            if(type === 'branch') {
+                let baru = prompt("Ubah Nama Cabang:", masterBranches[index]);
+                if(baru && baru.trim()) masterBranches[index] = baru.trim();
+                localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+            } else if(type === 'divisi') {
+                let baru = prompt("Ubah Nama Divisi:", masterDivisi[index]);
+                if(baru && baru.trim()) masterDivisi[index] = baru.trim();
+                localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+            } else if(type === 'kategori') {
+                let baru = prompt("Ubah Klasifikasi Kategori:", masterKategori[index]);
+                if(baru && baru.trim()) masterKategori[index] = baru.trim();
+                localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+            }
+            buildSelectOptions();
+            renderPanelSettingMaster();
+        }
+
+        function editPasswordUser(index, passBaru) {
+            if(!passBaru.trim()) return;
+            masterUsers[index].password = passBaru.trim();
+            localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+            alert(`Password diperbarui!`);
+        }
+
+        function addMasterItem(event, type) {
+            event.preventDefault();
+            if(type === 'branch') {
+                const inp = document.getElementById('addBranchInput');
+                if(inp.value.trim()) masterBranches.push(inp.value.trim());
+                inp.value = ''; localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+            } else if(type === 'divisi') {
+                const inp = document.getElementById('addDivisiInput');
+                if(inp.value.trim()) masterDivisi.push(inp.value.trim());
+                inp.value = ''; localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+            } else if(type === 'kategori') {
+                const inp = document.getElementById('addKategoriInput');
+                if(inp.value.trim()) masterKategori.push(inp.value.trim());
+                inp.value = ''; localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+            }
+            buildSelectOptions();
+            renderPanelSettingMaster();
+        }
+
+        function deleteMasterItem(type, index) {
+            if(!confirm('Kirim ke Gudang Sampah?')) return;
+            let dataLogSampah = { id: Date.now(), tipeData: type, kontenSli: null };
+
+            if(type === 'branch') {
+                dataLogSampah.kontenSli = masterBranches[index];
+                masterBranches.splice(index, 1);
+                localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+            } else if(type === 'divisi') {
+                dataLogSampah.kontenSli = masterDivisi[index];
+                masterDivisi.splice(index, 1);
+                localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+            } else if(type === 'kategori') {
+                dataLogSampah.kontenSli = masterKategori[index];
+                masterKategori.splice(index, 1);
+                localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+            } else if(type === 'user') {
+                if(masterUsers[index].username === 'admin') return;
+                dataLogSampah.kontenSli = masterUsers[index];
+                masterUsers.splice(index, 1);
+                localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+            }
+
+            trashMaster.push(dataLogSampah);
+            localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
+            buildSelectOptions();
+            renderPanelSettingMaster();
+        }
+
+        function renderRecycleBinLists() {
+            const containerReq = document.getElementById('trashRequestBox');
+            const containerMast = document.getElementById('trashMasterBox');
+            containerReq.innerHTML = '';
+            containerMast.innerHTML = '';
+
+            if(trashRequests.length === 0) containerReq.innerHTML = '<div class="text-gray-400 italic py-2">Kosong</div>';
+            if(trashMaster.length === 0) containerMast.innerHTML = '<div class="text-gray-400 italic py-2">Kosong</div>';
+
+            trashRequests.forEach((item, idx) => {
+                containerReq.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
+                    <div>
+                        <span class="font-bold text-gray-700">${item.namaBarang}</span> 
+                    </div>
+                    <button onclick="restoreRequestItem(${idx})" class="text-xs bg-blue-600 text-white font-semibold px-2 py-0.5 rounded">Restore</button>
+                </div>`;
+            });
+
+            trashMaster.forEach((item, idx) => {
+                let teksTampil = item.tipeData === 'user' ? `User: "${item.kontenSli.username}"` : `${item.tipeData.toUpperCase()}: "${item.kontenSli}"`;
+                containerMast.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
+                    <div class="text-gray-700 font-medium">${teksTampil}</div>
+                    <button onclick="restoreMasterItem(${idx})" class="text-xs bg-blue-600 text-white font-semibold px-2 py-0.5 rounded">Restore</button>
+                </div>`;
+            });
+        }
+
+        function restoreRequestItem(index) {
+            const item = trashRequests[index];
+            daftarPermintaan.push(item);
+            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+            trashRequests.splice(index, 1);
+            localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
+            renderPanelSettingMaster();
+            alert('Data pengajuan barang dipulihkan.');
+        }
+
+        function restoreMasterItem(index) {
+            const item = trashMaster[index];
+            if(item.tipeData === 'branch') { masterBranches.push(item.kontenSli); localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches)); }
+            else if(item.tipeData === 'divisi') { masterDivisi.push(item.kontenSli); localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi)); }
+            else if(item.tipeData === 'kategori') { masterKategori.push(item.kontenSli); localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori)); }
+            else if(item.tipeData === 'user') { masterUsers.push(item.kontenSli); localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers)); }
+
+            trashMaster.splice(index, 1);
+            localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
+            buildSelectOptions();
+            renderPanelSettingMaster();
+            alert('Komponen berhasil dikembalikan.');
+        }
+
+        function toggleLockOptionsBasedOnRole() {
+            const role = document.getElementById('newRole').value;
+            const boxBranch = document.getElementById('boxLockBranch');
+            const boxMenus = document.getElementById('boxLockMenus');
+
+            if(role === 'staff') {
+                boxBranch.classList.remove('hidden');
+                boxMenus.classList.add('hidden');
+            } 
+            else if(role === 'approver') {
+                boxBranch.classList.add('hidden');
+                boxMenus.classList.add('hidden');
+            }
+            else if(role === 'admin') {
+                boxBranch.classList.add('hidden');
+                boxMenus.classList.remove('hidden');
+            }
+        }
+
+        function tambahAkunUser(event) {
+            event.preventDefault();
+            const u = document.getElementById('newUsername').value.trim().toLowerCase();
+            const p = document.getElementById('newPassword').value.trim();
+            const r = document.getElementById('newRole').value;
+            
+            if(masterUsers.some(user => user.username.toLowerCase() === u)) {
+                alert('Username sudah terdaftar!'); return;
+            }
+
+            let l = "ALL";
+            let arrayIjinMenu = [];
+
+            if (r === 'staff') {
+                l = document.getElementById('newLockBranch').value;
+                arrayIjinMenu = ['form', 'tabel'];
+            } 
+            else if (r === 'approver') {
+                arrayIjinMenu = ['tabel'];
+            } 
+            else if (r === 'admin') {
+                if(document.getElementById('chkMenuForm').checked) arrayIjinMenu.push('form');
+                if(document.getElementById('chkMenuTabel').checked) arrayIjinMenu.push('tabel');
+                if(document.getElementById('chkMenuSetting').checked) arrayIjinMenu.push('setting');
+
+                if(arrayIjinMenu.length === 0) {
+                    alert('Minimal pilih 1 menu.'); return;
+                }
+            }
+
+            masterUsers.push({ 
+                username: u, 
+                password: p, 
+                role: r, 
+                lockBranch: l, 
+                allowedMenus: arrayIjinMenu 
+            });
+
+            localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            
+            renderPanelSettingMaster();
+            alert(`Akun pengguna baru level "${r.toUpperCase()}" berhasil diaktifkan.`);
+        }
+
+        function gantiLogoSistem(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    appLogo = e.target.result;
+                    localStorage.setItem(KEY_LOGO, appLogo);
+                    applyLogoSistem();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetLogoSistem() {
+            if(confirm('Reset logo?')) {
+                appLogo = ''; localStorage.removeItem(KEY_LOGO);
+                document.getElementById('inputLogoSistem').value = '';
+                applyLogoSistem();
+            }
+        }
+    </script>
+</body>
+</html>
