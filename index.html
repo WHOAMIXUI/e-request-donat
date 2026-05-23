@@ -211,20 +211,6 @@
 
             <div id="panelSetting" class="hidden space-y-6 no-print">
                 
-                <div class="bg-white rounded-lg shadow-sm border p-6 border-blue-300 bg-blue-50/20">
-                    <h3 class="text-sm font-bold text-blue-800 uppercase mb-2 flex items-center">💾 Pengamanan Database (Anti Hilang)</h3>
-                    <p class="text-xs text-gray-600 mb-4">Gunakan panel ini untuk mendownload backup data ke komputer Anda secara berkala, atau memasukkan kembali file cadangan jika aplikasi terhapus.</p>
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="eksporDatabaseLokal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded shadow-sm transition flex items-center">
-                            📥 Ekspor & Download Backup Data
-                        </button>
-                        <div class="relative bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2.5 rounded shadow-sm transition flex items-center cursor-pointer">
-                            <span>📤 Impor Pemulihan Data (.json)</span>
-                            <input type="file" id="inputFileBackup" accept=".json" onchange="imporDatabaseLokal(event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                        </div>
-                    </div>
-                </div>
-
                 <div class="bg-white rounded-lg shadow-sm border p-6">
                     <h3 class="text-sm font-bold text-gray-800 uppercase mb-3">🖼️ Pengaturan Branding & Logo</h3>
                     <div class="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded border">
@@ -350,50 +336,35 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
-        const KEY_REQUESTS = 'db_req_v16_data';
-        const KEY_BRANCHES = 'db_req_v16_branches';
-        const KEY_DIVISI = 'db_req_v16_divisi';
-        const KEY_KATEGORI = 'db_req_v16_kategori';
-        const KEY_USERS = 'db_req_v16_users';
-        const KEY_LOGO = 'db_req_v16_logo';
-        const KEY_TRASH_REQUESTS = 'db_req_v16_trash_req';
-        const KEY_TRASH_MASTER = 'db_req_v16_trash_master';
+        // === KONFIGURASI DATABASE ONLINE ===
+        // GANTI URL DI BAWAH INI SESUAI DENGAN URL DARI FIREBASE CONSOLE ANDA
+        const FIREBASE_DB_URL = "https://e-request-donat-bahagia-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+        firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
+        const dbRef = firebase.database().ref();
+
         const KEY_SESSION = 'db_req_v16_session';
 
         const defBranch = ["Donat Bahagia Bintaro", "Donat Bahagia Cipete", "Donat Bahagia Bekasi", "Donat Bahagia Bogor"];
         const defDivisi = ["Cashier", "Toping", "Produksi", "Cleaning Service", "Gudang", "Bar"];
         const defKategori = ["Alat Tulis Kantor (ATK)", "Perangkat/peralatan Operasional", "Chemical", "Medical Supplies"];
-        
         const defUsers = [
             { username: 'admin', password: '123', role: 'admin', lockBranch: 'ALL', allowedMenus: ['form', 'tabel', 'setting'] },
-            { username: 'approver', password: '123', role: 'approver', lockBranch: 'ALL', allowedMenus: ['tabel'] },
-            { username: 'staff_bintaro', password: '123', role: 'staff', lockBranch: 'Donat Bahagia Bintaro', allowedMenus: ['form', 'tabel'] }
+            { username: 'approver', password: '123', role: 'approver', lockBranch: 'ALL', allowedMenus: ['tabel'] }
         ];
 
-        let masterBranches = JSON.parse(localStorage.getItem(KEY_BRANCHES)) || defBranch;
-        let masterDivisi = JSON.parse(localStorage.getItem(KEY_DIVISI)) || defDivisi;
-        let masterKategori = JSON.parse(localStorage.getItem(KEY_KATEGORI)) || defKategori;
-        let masterUsers = JSON.parse(localStorage.getItem(KEY_USERS)) || defUsers;
-        let daftarPermintaan = JSON.parse(localStorage.getItem(KEY_REQUESTS)) || [];
-        let appLogo = localStorage.getItem(KEY_LOGO) || '';
-        
-        let trashRequests = JSON.parse(localStorage.getItem(KEY_TRASH_REQUESTS)) || [];
-        let trashMaster = JSON.parse(localStorage.getItem(KEY_TRASH_MASTER)) || [];
-
-        masterUsers = masterUsers.map(u => {
-            if(!u.allowedMenus) {
-                if(u.role === 'admin') u.allowedMenus = ['form', 'tabel', 'setting'];
-                else if(u.role === 'approver') u.allowedMenus = ['tabel'];
-                else u.allowedMenus = ['form', 'tabel'];
-            }
-            return u;
-        });
-
-        if(!localStorage.getItem(KEY_BRANCHES)) localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
-        if(!localStorage.getItem(KEY_DIVISI)) localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
-        if(!localStorage.getItem(KEY_KATEGORI)) localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
-        if(!localStorage.getItem(KEY_USERS)) localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+        let masterBranches = [];
+        let masterDivisi = [];
+        let masterKategori = [];
+        let masterUsers = [];
+        let daftarPermintaan = [];
+        let appLogo = '';
+        let trashRequests = [];
+        let trashMaster = [];
 
         let currentUserObj = null;
 
@@ -402,9 +373,38 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            applyLogoSistem();
             setDefaultTanggal();
-            buildSelectOptions();
+            
+            // Mengambil & Sinkronisasi data dari Firebase secara Real-time
+            dbRef.on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                masterBranches = data.branches || defBranch;
+                masterDivisi = data.divisi || defDivisi;
+                masterKategori = data.kategori || defKategori;
+                masterUsers = data.users || defUsers;
+                
+                // Konversi objek database menjadi array
+                daftarPermintaan = data.requests ? Object.values(data.requests) : [];
+                trashRequests = data.trash_requests ? Object.values(data.trash_requests) : [];
+                trashMaster = data.trash_master ? Object.values(data.trash_master) : [];
+                appLogo = data.logo || '';
+
+                // Jika data awal kosong di firebase, langsung buatkan data bawaan
+                if(!data.branches) dbRef.child('branches').set(defBranch);
+                if(!data.divisi) dbRef.child('divisi').set(defDivisi);
+                if(!data.kategori) dbRef.child('kategori').set(defKategori);
+                if(!data.users) dbRef.child('users').set(defUsers);
+
+                applyLogoSistem();
+                buildSelectOptions();
+                
+                if (currentUserObj) {
+                    if (document.getElementById('panelTabel').classList.contains('hidden') === false) renderTabel();
+                    if (document.getElementById('panelSetting').classList.contains('hidden') === false) renderPanelSettingMaster();
+                }
+            });
+
             checkSavedSession();
         });
 
@@ -414,7 +414,7 @@
                 currentUserObj = JSON.parse(savedUser);
                 document.getElementById('loginPage').classList.add('hidden');
                 document.getElementById('dashboardPage').classList.remove('hidden');
-                aturHakAkses();
+                setTimeout(() => { aturHakAkses(); }, 800);
             }
         }
 
@@ -438,6 +438,8 @@
             const sBranchFilter = document.getElementById('filterBranch');
             const sKategoriFilter = document.getElementById('filterKategori');
             const sNewUserBranch = document.getElementById('newLockBranch');
+
+            if(!sBranchForm) return;
 
             sBranchForm.innerHTML = '<option value="">-- Pilih Cabang --</option>';
             masterBranches.forEach(b => sBranchForm.innerHTML += `<option value="${b}">${b}</option>`);
@@ -506,16 +508,9 @@
                 }
             }
 
-            if (menus.includes('form')) {
-                switchPanel('form');
-            } else if (menus.includes('tabel')) {
-                switchPanel('tabel');
-            } else if (menus.includes('setting')) {
-                switchPanel('setting');
-            } else {
-                panelNav.classList.add('hidden');
-                alert('Akun Anda tidak memiliki hak akses ke menu manapun.');
-            }
+            if (menus.includes('form')) switchPanel('form');
+            else if (menus.includes('tabel')) switchPanel('tabel');
+            else if (menus.includes('setting')) switchPanel('setting');
         }
 
         function switchPanel(panelType) {
@@ -534,11 +529,8 @@
             document.getElementById('btnPanelSetting').className = inActiveStyle;
 
             const panelNav = document.getElementById('panelNav');
-            if (menus.length <= 1) {
-                panelNav.classList.add('hidden');
-            } else {
-                panelNav.classList.remove('hidden');
-            }
+            if (menus.length <= 1) panelNav.classList.add('hidden');
+            else panelNav.classList.remove('hidden');
 
             if (panelType === 'form') {
                 document.getElementById('panelForm').classList.remove('hidden');
@@ -576,11 +568,6 @@
                 return;
             }
 
-            if(videoFiles.length > 1) {
-                alert("Gagal mengirim! Maksimal video hanya 1 berkas.");
-                return;
-            }
-
             let arrayGambarBase64 = [];
             for (let i = 0; i < imageFiles.length; i++) {
                 const b64 = await convertFileToBase64(imageFiles[i]);
@@ -592,7 +579,33 @@
                 videoBase64 = await convertFileToBase64(videoFiles[0]);
             }
 
-            simpanDataMedia(arrayGambarBase64, videoBase64);
+            const reqId = Date.now();
+            const dataBaru = {
+                id: reqId,
+                tanggal: document.getElementById('tanggal').value,
+                branch: document.getElementById('branch').value || currentUserObj.lockBranch,
+                pemohon: document.getElementById('pemohon').value,
+                divisi: document.getElementById('divisi').value,
+                kategori: document.getElementById('kategori').value,
+                namaBarang: document.getElementById('namaBarang').value,
+                jumlah: document.getElementById('jumlah').value,
+                keterangan: document.getElementById('keterangan').value || '-',
+                status: 'Pending',
+                listGambar: arrayGambarBase64,
+                videoData: videoBase64,
+                catatanAdmin: ''
+            };
+
+            dbRef.child('requests').child(reqId).set(dataBaru, (error) => {
+                if (error) {
+                    alert('Gagal mengirim! Ukuran file berkas terlalu besar untuk database.');
+                } else {
+                    document.getElementById('requestForm').reset();
+                    aturHakAkses(); 
+                    setDefaultTanggal();
+                    alert('Pengajuan logistik online berhasil dikirim!');
+                }
+            });
         }
 
         function convertFileToBase64(file) {
@@ -604,40 +617,11 @@
             });
         }
 
-        function simpanDataMedia(imagesArray, videoStr) {
-            const dataBaru = {
-                id: Date.now(),
-                tanggal: document.getElementById('tanggal').value,
-                branch: document.getElementById('branch').value,
-                pemohon: document.getElementById('pemohon').value,
-                divisi: document.getElementById('divisi').value,
-                kategori: document.getElementById('kategori').value,
-                namaBarang: document.getElementById('namaBarang').value,
-                jumlah: document.getElementById('jumlah').value,
-                keterangan: document.getElementById('keterangan').value || '-',
-                status: 'Pending',
-                listGambar: imagesArray,
-                videoData: videoStr,
-                catatanAdmin: ''
-            };
-
-            try {
-                daftarPermintaan.push(dataBaru);
-                localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
-                document.getElementById('requestForm').reset();
-                aturHakAkses(); 
-                setDefaultTanggal();
-                alert('Pengajuan logistik dengan berkas media berhasil dikirim!');
-            } catch (error) {
-                alert('Peringatan: Ukuran file gambar/video terlalu besar.');
-                daftarPermintaan.pop();
-            }
-        }
-
         function renderTabel() {
             const tabel = document.getElementById('tabelData');
             const thAdmin = document.getElementById('thAdministrasi');
             const thCatatan = document.getElementById('thCatatanAdmin');
+            if(!tabel) return;
             tabel.innerHTML = '';
             
             let dataTerfilter = daftarPermintaan;
@@ -730,25 +714,19 @@
         }
 
         function ubahStatus(id, stat) {
-            daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, status: stat} : i);
-            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
-            renderTabel();
+            dbRef.child('requests').child(id).child('status').set(stat);
         }
 
         function simpanCatatanAdmin(id, teksCatatan) {
-            daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, catatanAdmin: teksCatatan} : i);
-            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
+            dbRef.child('requests').child(id).child('catatanAdmin').set(teksCatatan);
         }
 
         function hapusRequest(id) {
             if(confirm('Pindahkan data ke Gudang Sampah?')) {
                 const item = daftarPermintaan.find(i => i.id === id);
                 if(item) {
-                    trashRequests.push(item);
-                    localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
-                    daftarPermintaan = daftarPermintaan.filter(i => i.id !== id);
-                    localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
-                    renderTabel();
+                    dbRef.child('trash_requests').child(id).set(item);
+                    dbRef.child('requests').child(id).remove();
                 }
             }
         }
@@ -819,25 +797,23 @@
             if(type === 'branch') {
                 let baru = prompt("Ubah Nama Cabang:", masterBranches[index]);
                 if(baru && baru.trim()) masterBranches[index] = baru.trim();
-                localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+                dbRef.child('branches').set(masterBranches);
             } else if(type === 'divisi') {
                 let baru = prompt("Ubah Nama Divisi:", masterDivisi[index]);
                 if(baru && baru.trim()) masterDivisi[index] = baru.trim();
-                localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+                dbRef.child('divisi').set(masterDivisi);
             } else if(type === 'kategori') {
                 let baru = prompt("Ubah Klasifikasi Kategori:", masterKategori[index]);
                 if(baru && baru.trim()) masterKategori[index] = baru.trim();
-                localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+                dbRef.child('kategori').set(masterKategori);
             }
-            buildSelectOptions();
-            renderPanelSettingMaster();
         }
 
         function editPasswordUser(index, passBaru) {
             if(!passBaru.trim()) return;
             masterUsers[index].password = passBaru.trim();
-            localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
-            alert(`Password diperbarui!`);
+            dbRef.child('users').set(masterUsers);
+            alert(`Password diperbarui online!`);
         }
 
         function addMasterItem(event, type) {
@@ -845,120 +821,111 @@
             if(type === 'branch') {
                 const inp = document.getElementById('addBranchInput');
                 if(inp.value.trim()) masterBranches.push(inp.value.trim());
-                inp.value = ''; localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+                inp.value = ''; dbRef.child('branches').set(masterBranches);
             } else if(type === 'divisi') {
                 const inp = document.getElementById('addDivisiInput');
                 if(inp.value.trim()) masterDivisi.push(inp.value.trim());
-                inp.value = ''; localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+                inp.value = ''; dbRef.child('divisi').set(masterDivisi);
             } else if(type === 'kategori') {
                 const inp = document.getElementById('addKategoriInput');
                 if(inp.value.trim()) masterKategori.push(inp.value.trim());
-                inp.value = ''; localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+                inp.value = ''; dbRef.child('kategori').set(masterKategori);
             }
-            buildSelectOptions();
-            renderPanelSettingMaster();
         }
 
         function deleteMasterItem(type, index) {
             if(!confirm('Kirim ke Gudang Sampah?')) return;
-            let dataLogSampah = { id: Date.now(), tipeData: type, kontenSli: null };
+            let tmId = Date.now();
+            let dataLogSampah = { id: tmId, tipeData: type, kontenSli: null };
 
             if(type === 'branch') {
                 dataLogSampah.kontenSli = masterBranches[index];
                 masterBranches.splice(index, 1);
-                localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches));
+                dbRef.child('branches').set(masterBranches);
             } else if(type === 'divisi') {
                 dataLogSampah.kontenSli = masterDivisi[index];
                 masterDivisi.splice(index, 1);
-                localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi));
+                dbRef.child('divisi').set(masterDivisi);
             } else if(type === 'kategori') {
                 dataLogSampah.kontenSli = masterKategori[index];
                 masterKategori.splice(index, 1);
-                localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori));
+                dbRef.child('kategori').set(masterKategori);
             } else if(type === 'user') {
                 if(masterUsers[index].username === 'admin') return;
                 dataLogSampah.kontenSli = masterUsers[index];
                 masterUsers.splice(index, 1);
-                localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
+                dbRef.child('users').set(masterUsers);
             }
 
-            trashMaster.push(dataLogSampah);
-            localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
-            buildSelectOptions();
-            renderPanelSettingMaster();
+            dbRef.child('trash_master').child(tmId).set(dataLogSampah);
         }
 
         function renderRecycleBinLists() {
             const containerReq = document.getElementById('trashRequestBox');
             const containerMast = document.getElementById('trashMasterBox');
+            if(!containerReq) return;
             containerReq.innerHTML = '';
             containerMast.innerHTML = '';
 
             if(trashRequests.length === 0) containerReq.innerHTML = '<div class="text-gray-400 italic py-2">Kosong</div>';
             if(trashMaster.length === 0) containerMast.innerHTML = '<div class="text-gray-400 italic py-2">Kosong</div>';
 
-            trashRequests.forEach((item, idx) => {
+            trashRequests.forEach((item) => {
                 containerReq.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
                     <div class="truncate max-w-[60%]">
                         <span class="font-bold text-gray-700">${item.namaBarang}</span>
                         <span class="text-[10px] text-gray-400 block">${item.branch.replace('Donat Bahagia ', '')}</span> 
                     </div>
                     <div class="flex gap-1">
-                        <button onclick="restoreRequestItem(${idx})" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
-                        <button onclick="deleteRequestPermanen(${idx})" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
+                        <button onclick="restoreRequestItem('${item.id}')" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
+                        <button onclick="deleteRequestPermanen('${item.id}')" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
                     </div>
                 </div>`;
             });
 
-            trashMaster.forEach((item, idx) => {
+            trashMaster.forEach((item) => {
                 let teksTampil = item.tipeData === 'user' ? `User: "${item.kontenSli.username}"` : `${item.tipeData.toUpperCase()}: "${item.kontenSli}"`;
                 containerMast.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
                     <div class="text-gray-700 font-medium truncate max-w-[60%]">${teksTampil}</div>
                     <div class="flex gap-1">
-                        <button onclick="restoreMasterItem(${idx})" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
-                        <button onclick="deleteMasterPermanen(${idx})" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
+                        <button onclick="restoreMasterItem('${item.id}')" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
+                        <button onclick="deleteMasterPermanen('${item.id}')" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
                     </div>
                 </div>`;
             });
         }
 
-        function restoreRequestItem(index) {
-            const item = trashRequests[index];
-            daftarPermintaan.push(item);
-            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
-            trashRequests.splice(index, 1);
-            localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
-            renderPanelSettingMaster();
-            alert('Data pengajuan barang dipulihkan.');
-        }
-
-        function deleteRequestPermanen(index) {
-            if(confirm('Peringatan! Data pengajuan ini akan dihapus secara PERMANEN dan tidak bisa dikembalikan lagi. Lanjutkan?')) {
-                trashRequests.splice(index, 1);
-                localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
-                renderPanelSettingMaster();
+        function restoreRequestItem(id) {
+            const item = trashRequests.find(i => i.id == id);
+            if(item) {
+                dbRef.child('requests').child(id).set(item);
+                dbRef.child('trash_requests').child(id).remove();
+                alert('Data pengajuan dipulihkan online.');
             }
         }
 
-        function restoreMasterItem(index) {
-            const item = trashMaster[index];
-            if(item.tipeData === 'branch') { masterBranches.push(item.kontenSli); localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches)); }
-            else if(item.tipeData === 'divisi') { masterDivisi.push(item.kontenSli); localStorage.setItem(KEY_DIVISI, JSON.stringify(masterDivisi)); }
-            else if(item.tipeData === 'kategori') { masterKategori.push(item.kontenSli); localStorage.setItem(KEY_KATEGORI, JSON.stringify(masterKategori)); }
-            else if(item.tipeData === 'user') { masterUsers.push(item.kontenSli); localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers)); }
-
-            trashMaster.splice(index, 1);
-            localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
-            buildSelectOptions();
-            renderPanelSettingMaster();
-            alert('Komponen berhasil dikembalikan.');
+        function deleteRequestPermanen(id) {
+            if(confirm('Peringatan! Data ini akan dihapus PERMANEN dari Cloud Database. Lanjutkan?')) {
+                dbRef.child('trash_requests').child(id).remove();
+            }
         }
 
-        function deleteMasterPermanen(index) {
-            if(confirm('Peringatan! Pengaturan sistem/user ini akan dihapus secara PERMANEN. Lanjutkan?')) {
-                trashMaster.splice(index, 1);
-                localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
-                renderPanelSettingMaster();
+        function restoreMasterItem(id) {
+            const item = trashMaster.find(i => i.id == id);
+            if(!item) return;
+
+            if(item.tipeData === 'branch') { masterBranches.push(item.kontenSli); dbRef.child('branches').set(masterBranches); }
+            else if(item.tipeData === 'divisi') { masterDivisi.push(item.kontenSli); dbRef.child('divisi').set(masterDivisi); }
+            else if(item.tipeData === 'kategori') { masterKategori.push(item.kontenSli); dbRef.child('kategori').set(masterKategori); }
+            else if(item.tipeData === 'user') { masterUsers.push(item.kontenSli); dbRef.child('users').set(masterUsers); }
+
+            dbRef.child('trash_master').child(id).remove();
+            alert('Komponen dikembalikan online.');
+        }
+
+        function deleteMasterPermanen(id) {
+            if(confirm('Peringatan! Komponen sistem ini akan terhapus PERMANEN. Lanjutkan?')) {
+                dbRef.child('trash_master').child(id).remove();
             }
         }
 
@@ -970,12 +937,10 @@
             if(role === 'staff') {
                 boxBranch.classList.remove('hidden');
                 boxMenus.classList.add('hidden');
-            } 
-            else if(role === 'approver') {
+            } else if(role === 'approver') {
                 boxBranch.classList.add('hidden');
                 boxMenus.classList.add('hidden');
-            }
-            else if(role === 'admin') {
+            } else if(role === 'admin') {
                 boxBranch.classList.add('hidden');
                 boxMenus.classList.remove('hidden');
             }
@@ -997,34 +962,21 @@
             if (r === 'staff') {
                 l = document.getElementById('newLockBranch').value;
                 arrayIjinMenu = ['form', 'tabel'];
-            } 
-            else if (r === 'approver') {
+            } else if (r === 'approver') {
                 arrayIjinMenu = ['tabel'];
-            } 
-            else if (r === 'admin') {
+            } else if (r === 'admin') {
                 if(document.getElementById('chkMenuForm').checked) arrayIjinMenu.push('form');
                 if(document.getElementById('chkMenuTabel').checked) arrayIjinMenu.push('tabel');
                 if(document.getElementById('chkMenuSetting').checked) arrayIjinMenu.push('setting');
-
-                if(arrayIjinMenu.length === 0) {
-                    alert('Minimal pilih 1 menu.'); return;
-                }
+                if(arrayIjinMenu.length === 0) { alert('Minimal pilih 1 menu.'); return; }
             }
 
-            masterUsers.push({ 
-                username: u, 
-                password: p, 
-                role: r, 
-                lockBranch: l, 
-                allowedMenus: arrayIjinMenu 
-            });
+            masterUsers.push({ username: u, password: p, role: r, lockBranch: l, allowedMenus: arrayIjinMenu });
+            dbRef.child('users').set(masterUsers);
 
-            localStorage.setItem(KEY_USERS, JSON.stringify(masterUsers));
             document.getElementById('newUsername').value = '';
             document.getElementById('newPassword').value = '';
-            
-            renderPanelSettingMaster();
-            alert(`Akun pengguna baru level "${r.toUpperCase()}" berhasil diaktifkan.`);
+            alert(`Akun pengguna "${u}" berhasil diaktifkan secara online.`);
         }
 
         function gantiLogoSistem(event) {
@@ -1032,75 +984,17 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    appLogo = e.target.result;
-                    localStorage.setItem(KEY_LOGO, appLogo);
-                    applyLogoSistem();
+                    dbRef.child('logo').set(e.target.result);
                 };
                 reader.readAsDataURL(file);
             }
         }
 
         function resetLogoSistem() {
-            if(confirm('Reset logo?')) {
-                appLogo = ''; localStorage.removeItem(KEY_LOGO);
+            if(confirm('Reset logo toko?')) {
+                dbRef.child('logo').remove();
                 document.getElementById('inputLogoSistem').value = '';
-                applyLogoSistem();
             }
-        }
-
-        function eksporDatabaseLokal() {
-            const databaseObj = {
-                requests: localStorage.getItem(KEY_REQUESTS),
-                branches: localStorage.getItem(KEY_BRANCHES),
-                divisi: localStorage.getItem(KEY_DIVISI),
-                kategori: localStorage.getItem(KEY_KATEGORI),
-                users: localStorage.getItem(KEY_USERS),
-                logo: localStorage.getItem(KEY_LOGO),
-                trash_req: localStorage.getItem(KEY_TRASH_REQUESTS),
-                trash_master: localStorage.getItem(KEY_TRASH_MASTER)
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(databaseObj));
-            const downloadAnchor = document.createElement('a');
-            const tglSkg = new Date().toISOString().split('T')[0];
-            
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `BACKUP_E_REQUEST_DONAT_BAHAGIA_${tglSkg}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function imporDatabaseLokal(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if(!confirm("Peringatan! Mengimpor data baru akan menimpa data yang ada saat ini di browser ini. Lanjutkan?")) {
-                event.target.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsedData = JSON.parse(e.target.result);
-                    
-                    if(parsedData.requests) localStorage.setItem(KEY_REQUESTS, parsedData.requests);
-                    if(parsedData.branches) localStorage.setItem(KEY_BRANCHES, parsedData.branches);
-                    if(parsedData.divisi) localStorage.setItem(KEY_DIVISI, parsedData.divisi);
-                    if(parsedData.kategori) localStorage.setItem(KEY_KATEGORI, parsedData.kategori);
-                    if(parsedData.users) localStorage.setItem(KEY_USERS, parsedData.users);
-                    if(parsedData.logo) localStorage.setItem(KEY_LOGO, parsedData.logo);
-                    if(parsedData.trash_req) localStorage.setItem(KEY_TRASH_REQUESTS, parsedData.trash_req);
-                    if(parsedData.trash_master) localStorage.setItem(KEY_TRASH_MASTER, parsedData.trash_master);
-
-                    alert("Database berhasil dipulihkan! Halaman akan dimuat ulang otomatis.");
-                    window.location.reload();
-                } catch (err) {
-                    alert("Gagal membaca berkas! Pastikan format file berkstensi .json cadangan yang benar.");
-                }
-            };
-            reader.readAsText(file);
         }
     </script>
 </body>
