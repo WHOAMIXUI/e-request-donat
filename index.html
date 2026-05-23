@@ -20,7 +20,6 @@
 </head>
 <body class="bg-gray-100 font-sans min-h-screen">
 
-    <!-- ================= HALAMAN LOGIN ================= -->
     <div id="loginPage" class="flex items-center justify-center min-h-screen px-4">
         <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
             <div class="text-center mb-4">
@@ -52,9 +51,7 @@
     </div>
 
 
-    <!-- ================= HALAMAN DASHBOARD ================= -->
     <div id="dashboardPage" class="hidden">
-        <!-- Navbar -->
         <nav class="bg-blue-600 text-white p-4 shadow-sm mb-6 no-print">
             <div class="container mx-auto flex justify-between items-center max-w-5xl">
                 <h1 class="text-xl font-bold tracking-wide flex items-center">
@@ -68,10 +65,8 @@
             </div>
         </nav>
 
-        <!-- CONTAINER UTAMA -->
         <div class="container mx-auto px-4 max-w-5xl mb-12">
             
-            <!-- ====== TOMBOL NAVIGASI PANEL (TAB BUTTONS) ====== -->
             <div id="panelNav" class="flex p-1 bg-gray-200 rounded-lg space-x-1 mb-6 max-w-xl mx-auto no-print">
                 <button id="btnPanelForm" onclick="switchPanel('form')" class="hidden w-full py-2 text-xs sm:text-sm font-semibold rounded-md transition duration-200">
                     📝 Form Request
@@ -84,7 +79,6 @@
                 </button>
             </div>
 
-            <!-- ================= PANEL 1: FORM INPUT ================= -->
             <div id="panelForm" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden no-print">
                 <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
                     <h2 class="text-base font-bold text-gray-800 flex items-center">
@@ -130,7 +124,6 @@
                         </div>
                     </div>
 
-                    <!-- UPLOAD MEDIA BARU -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
                         <div>
                             <label class="block text-gray-600 text-xs font-bold uppercase tracking-wider mb-1">Foto / Gambar Barang <span class="text-red-500">*Wajib (Min 1, Max 5)</span></label>
@@ -156,7 +149,6 @@
                 </form>
             </div>
 
-            <!-- ================= PANEL 2: MONITORING LOGISTIK ================= -->
             <div id="panelTabel" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print-area">
                 <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4 print-panel-header">
                     <div class="flex items-center space-x-3">
@@ -171,7 +163,6 @@
                     </div>
                 </div>
 
-                <!-- FILTER BARANG -->
                 <div class="p-6 pb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 no-print bg-gray-50/50 border-b">
                     <div>
                         <label class="block text-gray-500 text-[11px] font-bold uppercase mb-1">Cari Barang / Pemohon</label>
@@ -196,7 +187,6 @@
                     </div>
                 </div>
 
-                <!-- Tabel Data -->
                 <div class="p-6">
                     <div class="overflow-x-auto border rounded-lg">
                         <table class="min-w-full divide-y divide-gray-200 table-auto">
@@ -219,10 +209,22 @@
                 </div>
             </div>
 
-            <!-- ================= PANEL 3: SETTING MASTER SYSTEM (ADMIN) ================= -->
             <div id="panelSetting" class="hidden space-y-6 no-print">
                 
-                <!-- GANTI LOGO -->
+                <div class="bg-white rounded-lg shadow-sm border p-6 border-blue-300 bg-blue-50/20">
+                    <h3 class="text-sm font-bold text-blue-800 uppercase mb-2 flex items-center">💾 Pengamanan Database (Anti Hilang)</h3>
+                    <p class="text-xs text-gray-600 mb-4">Gunakan panel ini untuk mendownload backup data ke komputer Anda secara berkala, atau memasukkan kembali file cadangan jika aplikasi terhapus.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="eksporDatabaseLokal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded shadow-sm transition flex items-center">
+                            📥 Ekspor & Download Backup Data
+                        </button>
+                        <div class="relative bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2.5 rounded shadow-sm transition flex items-center cursor-pointer">
+                            <span>📤 Impor Pemulihan Data (.json)</span>
+                            <input type="file" id="inputFileBackup" accept=".json" onchange="imporDatabaseLokal(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-lg shadow-sm border p-6">
                     <h3 class="text-sm font-bold text-gray-800 uppercase mb-3">🖼️ Pengaturan Branding & Logo</h3>
                     <div class="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded border">
@@ -235,9 +237,7 @@
                     </div>
                 </div>
 
-                <!-- 3 KOLOM DATA MASTER (EDIT + DELETE) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Kelola Cabang -->
                     <div class="bg-white rounded-lg shadow-sm border p-4">
                         <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🏢 Kelola Cabang</h3>
                         <form onsubmit="addMasterItem(event, 'branch')" class="flex gap-2 mb-3">
@@ -247,7 +247,6 @@
                         <ul id="listMasterBranch" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
                     </div>
 
-                    <!-- Kelola Divisi -->
                     <div class="bg-white rounded-lg shadow-sm border p-4">
                         <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">🛠️ Kelola Divisi</h3>
                         <form onsubmit="addMasterItem(event, 'divisi')" class="flex gap-2 mb-3">
@@ -257,7 +256,6 @@
                         <ul id="listMasterDivisi" class="text-xs space-y-1 max-h-40 overflow-y-auto"></ul>
                     </div>
 
-                    <!-- Kelola Kategori -->
                     <div class="bg-white rounded-lg shadow-sm border p-4">
                         <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 mb-3">📦 Kelola Kategori</h3>
                         <form onsubmit="addMasterItem(event, 'kategori')" class="flex gap-2 mb-3">
@@ -268,7 +266,6 @@
                     </div>
                 </div>
 
-                <!-- MANAJEMEN AKUN & LIMIT MENUS/BRANCH -->
                 <div class="bg-white rounded-lg shadow-sm border p-6">
                     <h3 class="text-sm font-bold text-gray-800 uppercase mb-4">👥 Tambah Akun Pengguna & Setting Akses Kunci Menu</h3>
                     <form onsubmit="tambahAkunUser(event)" class="bg-gray-50 border p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end mb-4">
@@ -289,13 +286,11 @@
                             </select>
                         </div>
                         
-                        <!-- LIMIT KUNCI CABANG (Untuk Staff) -->
                         <div id="boxLockBranch">
                             <label class="block text-gray-600 text-[11px] font-bold mb-1">Batasi Kunci Cabang</label>
                             <select id="newLockBranch" class="w-full px-2 py-1.5 border rounded text-xs outline-none bg-white"></select>
                         </div>
 
-                        <!-- LIMIT KUNCI MENU (KHUSUS UNTUK ROLE ADMIN YG DIDAFTARKAN) -->
                         <div id="boxLockMenus" class="sm:col-span-2 hidden bg-blue-50/50 p-2 border border-blue-200 rounded">
                             <label class="block text-blue-700 text-[11px] font-bold mb-1.5">Hak Akses Menu Admin:</label>
                             <div class="flex flex-wrap gap-4 text-xs">
@@ -335,7 +330,6 @@
                     </div>
                 </div>
 
-                <!-- ================= PANEL RESTORE DATA RECYCLE BIN ================= -->
                 <div class="bg-white rounded-lg shadow-sm border border-red-200 p-6">
                     <h3 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center">🗑️ Gudang Pemulihan Data (Recycle Bin)</h3>
                     <p class="text-xs text-gray-500 mb-4">Semua konfigurasi data master, akun, atau berkas pengajuan yang terhapus dapat di-restore semula.</p>
@@ -356,7 +350,6 @@
         </div>
     </div>
 
-    <!-- ================= LOGIKA JAVASCRIPT MASTER V19 ================= -->
     <script>
         const KEY_REQUESTS = 'db_req_v16_data';
         const KEY_BRANCHES = 'db_req_v16_branches';
@@ -1018,6 +1011,62 @@
                 document.getElementById('inputLogoSistem').value = '';
                 applyLogoSistem();
             }
+        }
+
+        // ================= FITUR BARU LOGIKA BACKUP & RESTORE DATA =================
+        function eksporDatabaseLokal() {
+            const databaseObj = {
+                requests: localStorage.getItem(KEY_REQUESTS),
+                branches: localStorage.getItem(KEY_BRANCHES),
+                divisi: localStorage.getItem(KEY_DIVISI),
+                kategori: localStorage.getItem(KEY_KATEGORI),
+                users: localStorage.getItem(KEY_USERS),
+                logo: localStorage.getItem(KEY_LOGO),
+                trash_req: localStorage.getItem(KEY_TRASH_REQUESTS),
+                trash_master: localStorage.getItem(KEY_TRASH_MASTER)
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(databaseObj));
+            const downloadAnchor = document.createElement('a');
+            const tglSkg = new Date().toISOString().split('T')[0];
+            
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `BACKUP_E_REQUEST_DONAT_BAHAGIA_${tglSkg}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function imporDatabaseLokal(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if(!confirm("Peringatan! Mengimpor data baru akan menimpa data yang ada saat ini di browser ini. Lanjutkan?")) {
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    
+                    if(parsedData.requests) localStorage.setItem(KEY_REQUESTS, parsedData.requests);
+                    if(parsedData.branches) localStorage.setItem(KEY_BRANCHES, parsedData.branches);
+                    if(parsedData.divisi) localStorage.setItem(KEY_DIVISI, parsedData.divisi);
+                    if(parsedData.kategori) localStorage.setItem(KEY_KATEGORI, parsedData.kategori);
+                    if(parsedData.users) localStorage.setItem(KEY_USERS, parsedData.users);
+                    if(parsedData.logo) localStorage.setItem(KEY_LOGO, parsedData.logo);
+                    if(parsedData.trash_req) localStorage.setItem(KEY_TRASH_REQUESTS, parsedData.trash_req);
+                    if(parsedData.trash_master) localStorage.setItem(KEY_TRASH_MASTER, parsedData.trash_master);
+
+                    alert("Database berhasil dipulihkan! Halaman akan dimuat ulang otomatis.");
+                    window.location.reload();
+                } catch (err) {
+                    alert("Gagal membaca berkas! Pastikan format file berkstensi .json cadangan yang benar.");
+                }
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
