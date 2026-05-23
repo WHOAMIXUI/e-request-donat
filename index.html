@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Request Barang - Donat Bahagia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -149,6 +150,7 @@
             </div>
 
             <div id="panelTabel" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print-area">
+                
                 <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4 print-panel-header">
                     <div class="flex items-center space-x-3">
                         <div id="printLogoContainer" class="hidden print:block"><span>🍩</span></div>
@@ -159,6 +161,29 @@
                     <div class="flex items-center space-x-2 no-print">
                         <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-md font-semibold shadow-sm">🖨️ Cetak</button>
                         <span id="totalRequest" class="bg-white text-gray-700 text-xs font-bold px-2.5 py-1.5 rounded-md border shadow-sm">Total: 0</span>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-slate-50/70 border-b grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 flex flex-col justify-center">
+                        <button onclick="setFilterStatusQuick('Pending')" class="bg-amber-50 hover:bg-amber-100 transition p-4 rounded-xl border border-amber-200 text-left relative overflow-hidden shadow-sm group">
+                            <div class="text-amber-800 font-bold text-xs uppercase tracking-wider">⌛ Status Pending</div>
+                            <div id="statPendingCount" class="text-3xl font-extrabold text-amber-600 mt-2">0</div>
+                            <div class="text-[11px] text-amber-500 mt-1 font-medium group-hover:underline">Klik untuk saring cepat →</div>
+                        </button>
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-left relative overflow-hidden shadow-sm">
+                            <div class="text-emerald-800 font-bold text-xs uppercase tracking-wider">✅ Disetujui</div>
+                            <div id="statSetujuiCount" class="text-3xl font-extrabold text-emerald-600 mt-2">0</div>
+                            <div class="text-[11px] text-emerald-500 mt-1">Permintaan selesai</div>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 text-left relative overflow-hidden shadow-sm">
+                            <div class="text-rose-800 font-bold text-xs uppercase tracking-wider">❌ Ditolak</div>
+                            <div id="statTolakCount" class="text-3xl font-extrabold text-rose-600 mt-2">0</div>
+                            <div class="text-[11px] text-rose-500 mt-1">Dibatalkan/ditolak</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border flex flex-col items-center justify-center shadow-sm h-40">
+                        <canvas id="requestPieChart"></canvas>
                     </div>
                 </div>
 
@@ -188,17 +213,18 @@
 
                 <div class="p-6">
                     <div class="overflow-x-auto border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200 table-auto">
+                        <table class="min-w-full divide-y divide-gray-200 table-fixed">
                             <thead class="bg-gray-50">
                                 <tr class="text-left text-xs font-bold text-gray-500 uppercase">
-                                    <th class="px-3 py-3">Tanggal</th>
-                                    <th class="px-3 py-3">Cabang</th>
-                                    <th class="px-4 py-3">Pemohon</th>
-                                    <th class="px-3 py-3 no-print">Berkas Media</th>
-                                    <th class="px-4 py-3">Detail Barang</th>
-                                    <th class="px-3 py-3 text-center">Qty</th>
-                                    <th class="px-3 py-3 text-center">Status</th>
-                                    <th id="thAdministrasi" class="px-4 py-3 text-center no-print">Aksi</th>
+                                    <th class="w-24 px-3 py-3">Tanggal</th>
+                                    <th class="w-28 px-3 py-3">Cabang</th>
+                                    <th class="w-36 px-4 py-3">Pemohon</th>
+                                    <th class="w-28 px-3 py-3 no-print">Media</th>
+                                    <th class="w-48 px-4 py-3">Detail Barang</th>
+                                    <th class="w-64 px-4 py-3">Catatan Alasan / Urgensi</th>
+                                    <th class="w-16 px-2 py-3 text-center">Qty</th>
+                                    <th class="w-24 px-3 py-3 text-center">Status</th>
+                                    <th id="thAdministrasi" class="w-32 px-4 py-3 text-center no-print">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelData" class="bg-white divide-y text-sm"></tbody>
@@ -318,7 +344,6 @@
     </div>
 
     <script>
-        // URL DATABASE FIREBASE ANDA
         const FIREBASE_BASE_URL = 'https://e-request-donat-bahagia-default-rtdb.asia-southeast1.firebasedatabase.app';
         const KEY_SESSION = 'db_req_v16_session';
 
@@ -329,12 +354,12 @@
         let daftarPermintaan = [];
         let appLogo = '';
         let currentUserObj = null;
+        let pieChartInstance = null; // Menyimpan instance chart agar tidak tumpang tindih
 
         function setDefaultTanggal() {
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
         }
 
-        // FUNGSI UTAMA: AMBIL DATA DARI FIREBASE ONLINE
         async function muatDataDariFirebase() {
             try {
                 const res = await fetch(`${FIREBASE_BASE_URL}/.json`);
@@ -346,7 +371,6 @@
                     masterKategori = Object.values(db.kategori || {});
                     appLogo = db.logo || '';
                     
-                    // Olah data permintaan
                     if (db.requests) {
                         daftarPermintaan = Object.keys(db.requests).map(key => ({
                             firebaseKey: key,
@@ -356,7 +380,6 @@
                         daftarPermintaan = [];
                     }
 
-                    // Olah data users
                     if (db.users) {
                         masterUsers = Object.keys(db.users).map(key => ({
                             firebaseKey: key,
@@ -371,7 +394,6 @@
             }
         }
 
-        // FUNGSI PENDUKUNG: UPDATE DATA KE FIREBASE
         async function updateFirebaseNode(path, data) {
             await fetch(`${FIREBASE_BASE_URL}/${path}.json`, {
                 method: 'PUT',
@@ -391,7 +413,6 @@
             const savedUser = localStorage.getItem(KEY_SESSION);
             if(savedUser) {
                 const parsed = JSON.parse(savedUser);
-                // Sinkronisasi data user terbaru dari Firebase untuk mencocokkan password/role
                 const liveUser = masterUsers.find(u => u.username.toLowerCase() === parsed.username.toLowerCase());
                 if(liveUser) {
                     currentUserObj = liveUser;
@@ -579,7 +600,6 @@
             };
 
             try {
-                // Tembak data langsung ke folder requests di Firebase menggunakan POST
                 await fetch(`${FIREBASE_BASE_URL}/requests.json`, {
                     method: 'POST',
                     body: JSON.stringify(dataBaru)
@@ -604,6 +624,59 @@
             });
         }
 
+        // 3. BARU: FUNGSI TOMBOL QUICK FILTER STATUS PENDING
+        function setFilterStatusQuick(statusKey) {
+            document.getElementById('filterStatus').value = statusKey;
+            renderTabel();
+        }
+
+        // 4. BARU: HITUNG STATISTIK & RE-RENDER PIE CHART
+        function updateDashboardCharts(dataTotalAwal) {
+            let pending = 0;
+            let disetujui = 0;
+            let ditolak = 0;
+
+            dataTotalAwal.forEach(item => {
+                if(item.status === 'Disetujui') disetujui++;
+                else if(item.status === 'Ditolak') ditolak++;
+                else pending++;
+            });
+
+            // Update Angka di Card
+            document.getElementById('statPendingCount').innerText = pending;
+            document.getElementById('statSetujuiCount').innerText = disetujui;
+            document.getElementById('statTolakCount').innerText = ditolak;
+
+            // Render/Update Chart.js Pie Chart
+            const ctx = document.getElementById('requestPieChart').getContext('2d');
+            
+            if (pieChartInstance) {
+                pieChartInstance.destroy(); // Hancurkan chart lama agar tidak bug saat hover
+            }
+
+            pieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pending', 'Disetujui', 'Ditolak'],
+                    datasets: [{
+                        data: [pending, disetujui, ditolak],
+                        backgroundColor: ['#f59e0b', '#10b981', '#f43f5e'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
         function renderTabel() {
             const tabel = document.getElementById('tabelData');
             const thAdmin = document.getElementById('thAdministrasi');
@@ -613,6 +686,9 @@
             if(currentUserObj.role === 'staff' && currentUserObj.lockBranch && currentUserObj.lockBranch !== 'ALL') {
                 dataTerfilter = daftarPermintaan.filter(item => item.branch === currentUserObj.lockBranch);
             }
+
+            // Hitung statistik dashboard berdasarkan hak akses user (sebelum filter baris dijalankan)
+            updateDashboardCharts(dataTerfilter);
 
             const cari = document.getElementById('filterCari').value.toLowerCase();
             const fBranch = document.getElementById('filterBranch').value;
@@ -655,24 +731,34 @@
                 
                 let aksiHtml = '';
                 if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
-                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest('${item.firebaseKey}')" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
+                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest('${item.firebaseKey}')" class="text-[11px] bg-red-100 text-red-700 px-1.5 py-1 rounded hover:bg-red-200 transition font-medium">Hapus</button>` : '';
                     aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
-                        <div class="flex justify-center gap-1">
-                            <button onclick="ubahStatus('${item.firebaseKey}', 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">✓</button>
-                            <button onclick="ubahStatus('${item.firebaseKey}', 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold">✕</button>
+                        <div class="flex flex-col justify-center items-center gap-1.5">
+                            <div class="flex gap-1">
+                                <button onclick="ubahStatus('${item.firebaseKey}', 'Disetujui')" title="Setujui" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✓</button>
+                                <button onclick="ubahStatus('${item.firebaseKey}', 'Ditolak')" title="Tolak" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2 py-1 rounded font-bold transition shadow-sm">✕</button>
+                            </div>
                             ${btnHapus}
                         </div>
                     </td>`;
                 }
 
                 tabel.innerHTML += `<tr>
-                    <td class="px-3 py-3 text-xs border-b">${item.tanggal}</td>
-                    <td class="px-3 py-3 font-semibold text-xs border-b">${item.branch.replace('Donat Bahagia ', '')}</td>
-                    <td class="px-4 py-3 border-b"><div class="font-bold">${item.pemohon}</div><div class="text-xs text-gray-400">${item.divisi}</div></td>
+                    <td class="px-3 py-3 text-xs border-b text-gray-600">${item.tanggal}</td>
+                    <td class="px-3 py-3 font-semibold text-xs border-b text-gray-700">${item.branch.replace('Donat Bahagia ', '')}</td>
+                    <td class="px-4 py-3 border-b"><div class="font-bold text-gray-800">${item.pemohon}</div><div class="text-xs text-gray-400 font-medium">${item.divisi}</div></td>
                     <td class="px-3 py-3 no-print border-b">${mediaHtml}</td>
-                    <td class="px-4 py-3 border-b"><div class="text-[10px] text-blue-500 font-bold">${item.kategori}</div><div class="font-bold">${item.namaBarang}</div><div class="text-xs italic text-gray-400">"Ket: ${item.keterangan}"</div></td>
-                    <td class="px-3 py-3 text-center font-bold border-b">${item.jumlah}</td>
-                    <td class="px-3 py-3 text-center border-b"><span class="px-2 py-0.5 border text-xs font-bold rounded ${badgeColor}">${item.status}</span></td>
+                    <td class="px-4 py-3 border-b">
+                        <div class="text-[10px] text-blue-600 font-extrabold uppercase tracking-wide mb-0.5">${item.kategori}</div>
+                        <div class="font-bold text-gray-900 text-sm">${item.namaBarang}</div>
+                    </td>
+                    <td class="px-4 py-3 border-b bg-slate-50/40">
+                        <div class="text-xs text-gray-600 font-normal leading-relaxed break-words bg-white border p-2 rounded-md shadow-sm max-h-24 overflow-y-auto">
+                            ${item.keterangan}
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 text-center font-extrabold text-gray-900 text-base border-b">${item.jumlah}</td>
+                    <td class="px-3 py-3 text-center border-b"><span class="px-2.5 py-1 border text-xs font-bold rounded-full shadow-sm ${badgeColor}">${item.status}</span></td>
                     ${aksiHtml}
                 </tr>`;
             });
