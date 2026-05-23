@@ -746,7 +746,22 @@
             if (currentUserObj.role === 'staff') thAdmin.classList.add('hidden');
             else thAdmin.classList.remove('hidden');
 
-            dataTerfilter.sort((a,b)=> b.id - a.id).forEach(item => {
+            dataTerfilter.sort((a, b) => {
+    // 1. Definisikan bobot urutan status
+    // Pending mendapat bobot terkecil (paling atas), Disetujui bobot terbesar (paling bawah)
+    const bobotStatus = { 'Pending': 1, 'Ditolak': 2, 'Disetujui': 3 };
+    
+    const bobotA = bobotStatus[a.status] || 2;
+    const bobotB = bobotStatus[b.status] || 2;
+
+    // Jika status berbeda, urutkan berdasarkan bobot status
+    if (bobotA !== bobotB) {
+        return bobotA - bobotB;
+    }
+
+    // 2. Jika statusnya sama, urutkan berdasarkan ID/waktu input terbaru di atas (descending)
+    return b.id - a.id;
+}).forEach(item => { 
                 let badgeColor = item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (item.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200');
                 
                 let mediaHtml = '<div class="flex flex-wrap gap-1 max-w-[120px]">';
