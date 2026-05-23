@@ -333,7 +333,7 @@
 
                 <div class="bg-white rounded-lg shadow-sm border border-red-200 p-6">
                     <h3 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center">🗑️ Gudang Pemulihan Data (Recycle Bin)</h3>
-                    <p class="text-xs text-gray-500 mb-4">Semua konfigurasi data master, akun, atau berkas pengajuan yang terhapus dapat di-restore semula.</p>
+                    <p class="text-xs text-gray-500 mb-4">Semua konfigurasi data master, akun, atau berkas pengajuan yang terhapus dapat di-restore semula atau dihapus permanen.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="border rounded p-3 bg-gray-50">
@@ -360,7 +360,7 @@
         const KEY_LOGO = 'db_req_v16_logo';
         const KEY_TRASH_REQUESTS = 'db_req_v16_trash_req';
         const KEY_TRASH_MASTER = 'db_req_v16_trash_master';
-        const KEY_SESSION = 'db_req_v16_session'; // Kunci Local Storage Baru untuk Sesi Login
+        const KEY_SESSION = 'db_req_v16_session';
 
         const defBranch = ["Donat Bahagia Bintaro", "Donat Bahagia Cipete"];
         const defDivisi = ["Cashier", "Toping", "Produksi", "Cleaning Service", "Gudang", "Bar"];
@@ -402,21 +402,17 @@
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
         }
 
-        // ================= PENGECEKAN AKTIF SAAT KODE PERTAMA DI-REFRESH =================
         window.addEventListener('DOMContentLoaded', () => {
             applyLogoSistem();
             setDefaultTanggal();
             buildSelectOptions();
-            checkSavedSession(); // Cek apakah sebelumnya user sudah login
+            checkSavedSession();
         });
 
         function checkSavedSession() {
             const savedUser = localStorage.getItem(KEY_SESSION);
             if(savedUser) {
-                // Konversi string kembali menjadi objek user
                 currentUserObj = JSON.parse(savedUser);
-                
-                // Sembunyikan form login, langsung tampilkan dashboard
                 document.getElementById('loginPage').classList.add('hidden');
                 document.getElementById('dashboardPage').classList.remove('hidden');
                 aturHakAkses();
@@ -471,10 +467,7 @@
 
             if (foundUser) {
                 currentUserObj = foundUser;
-                
-                // BARU: Simpan data user ke local storage agar saat refresh tidak hilang
                 localStorage.setItem(KEY_SESSION, JSON.stringify(currentUserObj));
-
                 document.getElementById('loginPage').classList.add('hidden');
                 document.getElementById('dashboardPage').classList.remove('hidden');
                 aturHakAkses();
@@ -564,8 +557,7 @@
 
         function logout() {
             currentUserObj = null;
-            localStorage.removeItem(KEY_SESSION); // BARU: Hapus sesi dari local storage saat klik keluar
-
+            localStorage.removeItem(KEY_SESSION);
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardPage').classList.add('hidden');
             document.getElementById('username').value = '';
@@ -573,7 +565,6 @@
             document.getElementById('loginError').classList.add('hidden');
         }
 
-        // ================= PROSES MULTI FILE UPLOAD & VALIDASI =================
         async function tambahBarang(event) {
             event.preventDefault();
             const imageInput = document.getElementById('gambarBarang');
@@ -627,7 +618,8 @@
                 keterangan: document.getElementById('keterangan').value || '-',
                 status: 'Pending',
                 listGambar: imagesArray,
-                videoData: videoStr    
+                videoData: videoStr,
+                catatanAdmin: ''
             };
 
             try {
@@ -646,6 +638,7 @@
         function renderTabel() {
             const tabel = document.getElementById('tabelData');
             const thAdmin = document.getElementById('thAdministrasi');
+            const thCatatan = document.getElementById('thCatatanAdmin');
             tabel.innerHTML = '';
             
             let dataTerfilter = daftarPermintaan;
@@ -666,16 +659,20 @@
             });
 
             document.getElementById('totalRequest').innerText = `Total: ${dataTerfilter.length}`;
+            
+            if(currentUserObj.role === 'staff') {
+                thAdmin.classList.add('hidden');
+                if (thCatatan) thCatatan.classList.add('hidden');
+            } else {
+                thAdmin.classList.remove('hidden');
+                if (thCatatan) thCatatan.classList.remove('hidden');
+            }
+
             if(dataTerfilter.length === 0) {
                 document.getElementById('pesanKosong').classList.remove('hidden');
-                if (currentUserObj.role === 'staff') thAdmin.classList.add('hidden');
-                else thAdmin.classList.remove('hidden');
                 return;
             }
             document.getElementById('pesanKosong').classList.add('hidden');
-
-            if (currentUserObj.role === 'staff') thAdmin.classList.add('hidden');
-            else thAdmin.classList.remove('hidden');
 
             dataTerfilter.sort((a,b)=> b.id - a.id).forEach(item => {
                 let badgeColor = item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (item.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200');
@@ -695,31 +692,23 @@
                 let aksiHtml = '';
                 let catatanHtml = '';
 
-    // Default sembunyikan kolom catatan untuk staff
-    const thCatatan = document.getElementById('thCatatanAdmin');
-    if (thCatatan) thCatatan.classList.add('hidden');
+                if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
+                    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest(${item.id})" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
+                    
+                    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
+                        <div class="flex justify-center items-center gap-1">
+                            <button onclick="ubahStatus(${item.id}, 'Pending')" class="bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold" title="Set Pending">⌛</button>
+                            <button onclick="ubahStatus(${item.id}, 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold" title="Setujui">✓</button>
+                            <button onclick="ubahStatus(${item.id}, 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold" title="Tolak">✕</button>
+                            ${btnHapus}
+                        </div>
+                    </td>`;
 
-    if(currentUserObj.role === 'admin' || currentUserObj.role === 'approver') {
-    if (thCatatan) thCatatan.classList.remove('hidden');
-    
-    let btnHapus = currentUserObj.role === 'admin' ? `<button onclick="hapusRequest(${item.id})" class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded hover:bg-red-200">Hapus</button>` : '';
-    
-    // Menambahkan tombol pending (⌛) di dalam barisan aksi
-    aksiHtml = `<td class="px-3 py-2 text-center no-print border-b">
-        <div class="flex justify-center items-center gap-1">
-            <button onclick="ubahStatus(${item.id}, 'Pending')" class="bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold" title="Set Pending">⌛</button>
-            <button onclick="ubahStatus(${item.id}, 'Disetujui')" class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold" title="Setujui">✓</button>
-            <button onclick="ubahStatus(${item.id}, 'Ditolak')" class="bg-rose-600 text-white px-1.5 py-0.5 rounded font-bold" title="Tolak">✕</button>
-            ${btnHapus}
-        </div>
-    </td>`;
-
-    // Menambahkan kolom input catatan admin di sebelah kolom aksi
-    let nilaiCatatan = item.catatanAdmin || '';
-    catatanHtml = `<td class="px-3 py-2 no-print border-b">
-        <input type="text" value="${nilaiCatatan}" onchange="simpanCatatanAdmin(${item.id}, this.value)" placeholder="Tambah catatan..." class="w-full px-2 py-1 border rounded text-xs outline-none bg-gray-50 focus:bg-white">
-    </td>`;
-}
+                    let nilaiCatatan = item.catatanAdmin || '';
+                    catatanHtml = `<td class="px-3 py-2 no-print border-b">
+                        <input type="text" value="${nilaiCatatan}" onchange="simpanCatatanAdmin(${item.id}, this.value)" placeholder="Tambah catatan..." class="w-full px-2 py-1 border rounded text-xs outline-none bg-gray-50 focus:bg-white">
+                    </td>`;
+                }
 
                 tabel.innerHTML += `<tr>
                     <td class="px-3 py-3 text-xs border-b">${item.tanggal}</td>
@@ -741,16 +730,15 @@
             win.document.write(`<title>Video Playback</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><video src="${srcData}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
         }
 
-function simpanCatatanAdmin(id, teksCatatan) {
-daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, catatanAdmin: teksCatatan} : i);
-localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
-// Kita tidak perlu merender ulang tabel penuh agar ketikan user di text box tidak kehilangan fokus (loss focus)
-}
-
         function ubahStatus(id, stat) {
             daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, status: stat} : i);
             localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
             renderTabel();
+        }
+
+        function simpanCatatanAdmin(id, teksCatatan) {
+            daftarPermintaan = daftarPermintaan.map(i => i.id === id ? {...i, catatanAdmin: teksCatatan} : i);
+            localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
         }
 
         function hapusRequest(id) {
@@ -912,18 +900,25 @@ localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
 
             trashRequests.forEach((item, idx) => {
                 containerReq.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
-                    <div>
-                        <span class="font-bold text-gray-700">${item.namaBarang}</span> 
+                    <div class="truncate max-w-[60%]">
+                        <span class="font-bold text-gray-700">${item.namaBarang}</span>
+                        <span class="text-[10px] text-gray-400 block">${item.branch.replace('Donat Bahagia ', '')}</span> 
                     </div>
-                    <button onclick="restoreRequestItem(${idx})" class="text-xs bg-blue-600 text-white font-semibold px-2 py-0.5 rounded">Restore</button>
+                    <div class="flex gap-1">
+                        <button onclick="restoreRequestItem(${idx})" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
+                        <button onclick="deleteRequestPermanen(${idx})" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
+                    </div>
                 </div>`;
             });
 
             trashMaster.forEach((item, idx) => {
                 let teksTampil = item.tipeData === 'user' ? `User: "${item.kontenSli.username}"` : `${item.tipeData.toUpperCase()}: "${item.kontenSli}"`;
                 containerMast.innerHTML += `<div class="flex justify-between items-center p-2 bg-white rounded border mb-1 shadow-sm">
-                    <div class="text-gray-700 font-medium">${teksTampil}</div>
-                    <button onclick="restoreMasterItem(${idx})" class="text-xs bg-blue-600 text-white font-semibold px-2 py-0.5 rounded">Restore</button>
+                    <div class="text-gray-700 font-medium truncate max-w-[60%]">${teksTampil}</div>
+                    <div class="flex gap-1">
+                        <button onclick="restoreMasterItem(${idx})" class="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700">Restore</button>
+                        <button onclick="deleteMasterPermanen(${idx})" class="text-[11px] bg-red-600 text-white font-semibold px-2 py-1 rounded hover:bg-red-700">Delete</button>
+                    </div>
                 </div>`;
             });
         }
@@ -938,6 +933,14 @@ localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
             alert('Data pengajuan barang dipulihkan.');
         }
 
+        function deleteRequestPermanen(index) {
+            if(confirm('Peringatan! Data pengajuan ini akan dihapus secara PERMANEN dan tidak bisa dikembalikan lagi. Lanjutkan?')) {
+                trashRequests.splice(index, 1);
+                localStorage.setItem(KEY_TRASH_REQUESTS, JSON.stringify(trashRequests));
+                renderPanelSettingMaster();
+            }
+        }
+
         function restoreMasterItem(index) {
             const item = trashMaster[index];
             if(item.tipeData === 'branch') { masterBranches.push(item.kontenSli); localStorage.setItem(KEY_BRANCHES, JSON.stringify(masterBranches)); }
@@ -950,6 +953,14 @@ localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
             buildSelectOptions();
             renderPanelSettingMaster();
             alert('Komponen berhasil dikembalikan.');
+        }
+
+        function deleteMasterPermanen(index) {
+            if(confirm('Peringatan! Pengaturan sistem/user ini akan dihapus secara PERMANEN. Lanjutkan?')) {
+                trashMaster.splice(index, 1);
+                localStorage.setItem(KEY_TRASH_MASTER, JSON.stringify(trashMaster));
+                renderPanelSettingMaster();
+            }
         }
 
         function toggleLockOptionsBasedOnRole() {
@@ -1038,7 +1049,6 @@ localStorage.setItem(KEY_REQUESTS, JSON.stringify(daftarPermintaan));
             }
         }
 
-        // ================= FITUR BARU LOGIKA BACKUP & RESTORE DATA =================
         function eksporDatabaseLokal() {
             const databaseObj = {
                 requests: localStorage.getItem(KEY_REQUESTS),
