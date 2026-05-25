@@ -599,7 +599,7 @@
             const dataTampilSaatIni = dataTerfilter.slice(0, itemTampilMaksimal);
 
             if (dataTerfilter.length > itemTampilMaksimal) {
-                loadMoreBtnContainer.classList.remove('hidden'); // Munculkan tombol jika data masih melimpah
+                loadMoreBtnContainer.classList.remove('hidden'); 
             } else {
                 loadMoreBtnContainer.classList.add('hidden');
             }
@@ -608,16 +608,24 @@
             dataTampilSaatIni.forEach(item => { 
                 let badgeColor = item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (item.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200');
                 
-                // OPTIMASI: Tambahkan atribut loading="lazy" pada gambar agar browser tidak lag saat memuat Base64
+                // PERBAIKAN STRUKTUR MEDIAHTML AGAR SELALU TERISI JIKA ADA FOTO ATAU VIDEO
                 let mediaHtml = '<div class="flex flex-wrap gap-1.5 max-w-[120px]">';
+                let punyaMedia = false;
+
                 if(item.listGambar && item.listGambar.length > 0) {
+                    punyaMedia = true;
                     item.listGambar.forEach(imgSrc => {
                         mediaHtml += `<img src="${imgSrc}" loading="lazy" class="w-8 h-8 object-cover rounded-lg border border-slate-200 cursor-zoom-in transition hover:scale-105" onclick="window.open('${imgSrc}')">`;
                     });
                 }
-                if(item.videoData) {
-                    mediaHtml += `<button onclick="bukaModalVideo('${item.id}')" class="w-8 h-8 text-[11px] bg-slate-800 text-white rounded-lg font-bold flex items-center justify-center">🎬</button>
+                if(item.videoData && item.videoData.trim() !== '') {
+                    punyaMedia = true;
+                    mediaHtml += `<button onclick="bukaModalVideo('${item.id}')" class="w-8 h-8 text-[11px] bg-slate-800 text-white rounded-lg font-bold flex items-center justify-center" title="Putar Video">🎬</button>
                     <div id="vidContainer_${item.id}" class="hidden">${item.videoData}</div>`;
+                }
+
+                if(!punyaMedia) {
+                    mediaHtml += '<span class="text-slate-400 italic text-[11px]">Tanpa Media</span>';
                 }
                 mediaHtml += '</div>';
                 
@@ -704,13 +712,20 @@
                 }
             }
 
+            // PERBAIKAN PROMISE PEMBACAAN FILE VIDEO (ANTI ASINKRONUS ERROR)
             let videoBase64 = '';
             if(videoInput.files.length === 1) {
-                const vReader = new FileReader();
-                videoBase64 = await new Promise((res) => {
-                    vReader.onload = (e) => res(e.target.result);
-                    vReader.readAsDataURL(videoInput.files[0]);
-                });
+                try {
+                    videoBase64 = await new Promise((resolve, reject) => {
+                        const vReader = new FileReader();
+                        vReader.onload = (e) => resolve(e.target.result);
+                        vReader.onerror = (err) => reject(err);
+                        vReader.readAsDataURL(videoInput.files[0]);
+                    });
+                } catch (vErr) {
+                    console.error("Gagal memproses video:", vErr);
+                    videoBase64 = '';
+                }
             }
 
             const dataBaru = {
@@ -730,28 +745,9 @@
 
             try {
                 await fetch(`${FIREBASE_BASE_URL}/requests.json`, { method: 'POST', body: JSON.stringify(dataBaru) });
-                
-                // === INTEGRASI DIRECT WHATSAPP ===
-                const noWhatsApp = "6282343487908"; 
-                const teksWhatsApp = `*PENGAJUAN BARANG BARU (E-REQUEST)*\n` +
-                                     `-----------------------------------------\n` +
-                                     `📅 *Tanggal:* ${dataBaru.tanggal}\n` +
-                                     `🏢 *Cabang:* ${dataBaru.branch}\n` +
-                                     `👤 *Pemohon:* ${dataBaru.pemohon} (${dataBaru.divisi})\n` +
-                                     `📦 *Kategori:* ${dataBaru.kategori}\n` +
-                                     `🛠️ *Nama Barang:* ${dataBaru.namaBarang}\n` +
-                                     `🔢 *Jumlah (Qty):* ${dataBaru.jumlah}\n` +
-                                     `⚠️ *Alasan Urgensi:* ${dataBaru.keterangan}\n` +
-                                     `-----------------------------------------\n` +
-                                     `*Status:* ⌛ Pending (Menunggu Persetujuan Pusat)`;
-
-                const urlWA = `https://api.whatsapp.com/send?phone=${noWhatsApp}&text=${encodeURIComponent(teksWhatsApp)}`;
-                window.open(urlWA, '_blank');
-                // =================================
-
                 document.getElementById('requestForm').reset();
                 setDefaultTanggal();
-                alert('Pengajuan logistik berhasil terkirim ke sistem & WhatsApp!');
+                alert('Pengajuan logistik berhasil terkirim!');
                 if(currentUserObj.allowedMenus.includes('tabel')) { switchPanel('tabel'); }
             } catch (error) { alert('Gagal mengirim data, periksa jaringan.'); }
             finally { btnSubmit.disabled = false; btnSubmit.innerText = '🚀 Kirim Pengajuan Ke Pusat'; }
