@@ -730,9 +730,28 @@
 
             try {
                 await fetch(`${FIREBASE_BASE_URL}/requests.json`, { method: 'POST', body: JSON.stringify(dataBaru) });
+                
+                // === INTEGRASI DIRECT WHATSAPP ===
+                const noWhatsApp = "6282343487908"; 
+                const teksWhatsApp = `*PENGAJUAN BARANG BARU (E-REQUEST)*\n` +
+                                     `-----------------------------------------\n` +
+                                     `📅 *Tanggal:* ${dataBaru.tanggal}\n` +
+                                     `🏢 *Cabang:* ${dataBaru.branch}\n` +
+                                     `👤 *Pemohon:* ${dataBaru.pemohon} (${dataBaru.divisi})\n` +
+                                     `📦 *Kategori:* ${dataBaru.kategori}\n` +
+                                     `🛠️ *Nama Barang:* ${dataBaru.namaBarang}\n` +
+                                     `🔢 *Jumlah (Qty):* ${dataBaru.jumlah}\n` +
+                                     `⚠️ *Alasan Urgensi:* ${dataBaru.keterangan}\n` +
+                                     `-----------------------------------------\n` +
+                                     `*Status:* ⌛ Pending (Menunggu Persetujuan Pusat)`;
+
+                const urlWA = `https://api.whatsapp.com/send?phone=${noWhatsApp}&text=${encodeURIComponent(teksWhatsApp)}`;
+                window.open(urlWA, '_blank');
+                // =================================
+
                 document.getElementById('requestForm').reset();
                 setDefaultTanggal();
-                alert('Pengajuan logistik berhasil terkirim!');
+                alert('Pengajuan logistik berhasil terkirim ke sistem & WhatsApp!');
                 if(currentUserObj.allowedMenus.includes('tabel')) { switchPanel('tabel'); }
             } catch (error) { alert('Gagal mengirim data, periksa jaringan.'); }
             finally { btnSubmit.disabled = false; btnSubmit.innerText = '🚀 Kirim Pengajuan Ke Pusat'; }
